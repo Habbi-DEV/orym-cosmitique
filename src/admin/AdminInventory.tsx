@@ -276,6 +276,7 @@ export default function AdminInventory() {
             Nouveau mouvement
           </button>
         </div>
+      </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
