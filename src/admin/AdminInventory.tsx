@@ -215,7 +215,7 @@ export default function AdminInventory() {
     downloadCsv(
       `mouvements-oryam-${new Date().toISOString().slice(0, 10)}.csv`,
       filteredLedger.map((m) => ({
-        Date: new Date(m.createdAt).toLocaleString('fr-FR'),
+        Date: new Date(m.at).toLocaleString('fr-FR'),
         Produit: m.productName,
         Type: MOVEMENT_LABELS[m.kind],
         Quantité: m.qty,
