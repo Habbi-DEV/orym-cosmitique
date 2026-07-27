@@ -1,6 +1,6 @@
 // ⚠️ Remplacez par le numéro WhatsApp réel de la boutique
 // Format international, sans "+", sans espaces (ex. 213555000000)
-export const WHATSAPP_NUMBER = '213555000000';
+export const WHATSAPP_NUMBER = '213554031431';
 
 export function getWhatsAppUrl(message?: string): string {
   const text = encodeURIComponent(
