@@ -343,7 +343,11 @@ export default function ProductPage() {
           </div>
         </div>
 
-        <ProductReviews productId={product.id} />
+        {/* ⚠️ Fix : product.id est le SLUG applicatif, mais reviews.product_id
+            (colonne DB) est un uuid réel (products.id) — on transmet donc
+            product.dbId quand disponible (mode Supabase), avec repli sur le
+            slug uniquement en mode démo local sans Supabase. */}
+        <ProductReviews productId={product.dbId ?? product.id} />
 
         {/* Cross-sell */}
         <section className="mt-16 md:mt-24">
