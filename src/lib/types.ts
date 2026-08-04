@@ -30,6 +30,12 @@ export interface CatalogProduct extends Product {
   isActive: boolean;
   variants: Variant[];
   packItems?: { productId: string; qty: number }[];
+  // UUID réel de la ligne `products` côté Supabase (distinct du `id`
+  // applicatif ci-dessus, qui est le SLUG utilisé partout dans l'app —
+  // routes, panier, wishlist…). Nécessaire pour toute écriture référençant
+  // products.id côté base (order_items.product_id, reviews.product_id).
+  // Absent en mode démo local (sans Supabase).
+  dbId?: string;
 }
 
 // ---------------- Commandes ----------------
