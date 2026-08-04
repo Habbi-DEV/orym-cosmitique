@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Package,
   AlertTriangle,
+  Megaphone,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
@@ -761,6 +762,17 @@ export default function AdminProducts() {
     [catalog, query],
   );
 
+  // Lien de campagne (page /lp/:id sans navigation, pensée pour les publicités
+  // Facebook/Instagram) — copié dans le presse-papiers pour coller direct
+  // dans le gestionnaire de pub.
+  const copyLandingLink = (p: CatalogProduct) => {
+    const url = `${window.location.origin}/lp/${p.id}`;
+    void navigator.clipboard
+      .writeText(url)
+      .then(() => showToast('Lien de campagne copié \u2014 prêt à coller dans vos publicités'))
+      .catch(() => showToast('Impossible de copier le lien \u2014 copiez-le manuellement : ' + url));
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -888,6 +900,14 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => copyLandingLink(p)}
+                          aria-label="Copier le lien de campagne (Landing Page)"
+                          title="Copier le lien de campagne (Landing Page)"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition hover:border-violetp hover:text-violetp"
+                        >
+                          <Megaphone size={13} />
+                        </button>
                         <button
                           onClick={() => setEditing(p)}
                           aria-label="Modifier"
