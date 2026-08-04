@@ -119,7 +119,9 @@ export default function LandingPage() {
           <p className="mb-4 text-center font-serif text-xl font-semibold">
             Ce que nos clientes en disent
           </p>
-          <ProductReviews productId={product.id} />
+          {/* ⚠️ Fix : même bug que ProductPage.tsx — product.id est le slug
+              applicatif, pas l'uuid réel attendu par reviews.product_id. */}
+          <ProductReviews productId={product.dbId ?? product.id} />
         </div>
       </main>
 
