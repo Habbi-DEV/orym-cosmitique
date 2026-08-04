@@ -107,6 +107,11 @@ const uid = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2,
 // ---------------- Mappers Supabase (ligne DB -> modèle app) ----------------
 const rowToProduct = (r: Record<string, unknown>): CatalogProduct => ({
   id: (r.slug as string) ?? String(r.id),
+  // UUID réel products.id — distinct du `id` applicatif ci-dessus (le slug).
+  // Requis pour toute écriture référençant products.id côté base
+  // (order_items.product_id, reviews.product_id) — voir createOrder et
+  // ProductPage.tsx. Undefined uniquement en mode démo local sans Supabase.
+  dbId: r.id != null ? String(r.id) : undefined,
   name: (r.name as string) ?? 'Produit',
   type: (r.type as 'produit' | 'pack') ?? 'produit',
   category: (r.category as string) || 'Autres',
@@ -660,10 +665,22 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         if (input.items.length > 0) {
+          // ⚠️ Bug trouvé et corrigé ici : `i.productId` est le SLUG
+          // applicatif (ex. "serum-eclat"), pas l'UUID réel de la table
+          // `products`. order_items.product_id est une colonne `uuid`
+          // (FK products.id) : y insérer un slug provoquait une erreur
+          // Postgres silencieuse (avalée par le `console.warn` ci-dessous),
+          // laissant systématiquement product_id à NULL. Conséquence directe
+          // en cascade : le trigger de décrément de stock (qui joint sur
+          // order_items.product_id = products.id) ne trouvait jamais de
+          // ligne à mettre à jour, et la vérification "Achat vérifié" des
+          // avis clients ne pouvait jamais rattacher une commande à un
+          // produit. On résout le vrai uuid via le catalogue local (déjà
+          // hydraté avec `dbId` — voir rowToProduct) avant l'insertion.
           const { error: itemsErr } = await supabase.from('order_items').insert(
             input.items.map((i) => ({
               order_id: dbOrderId,
-              product_id: i.productId,
+              product_id: catalog.find((p) => p.id === i.productId)?.dbId ?? null,
               name: i.name,
               price: i.price,
               qty: i.qty,
