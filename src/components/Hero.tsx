@@ -9,7 +9,7 @@ export default function Hero() {
     <section id="accueil" className="scroll-mt-20">
       {/* Pleine largeur, sans marge ni conteneur — l’image domine tout le
           hero, écran à écran, comme sur la référence fournie. */}
-      <div className="relative w-full overflow-hidden">
+      <div className="relative w-full overflow-hidden rounded-t-[28px]">
         <img
           src="/img/hero.png"
           alt="Collection Oryam Cosmetics"
