@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react';
-import { Flame, ArrowUp, ArrowDown, X } from 'lucide-react';
+import { Flame, ArrowUp, ArrowDown } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import ProductCard from './ProductCard';
 import { getCategories, sortProducts, type SortKey } from '../lib/catalog';
@@ -33,8 +33,8 @@ function SectionHead({
   );
 }
 
-// Tri rapide affiché en boutons (au lieu d'un <select>) — Populaires /
-// Prix croissant / Prix décroissant, avec icône, comme sur la référence.
+// Tri rapide — icône + texte minimal (pas de fond plein), dans le même
+// esprit éditorial que les catégories ci-dessous.
 const QUICK_SORTS: { key: SortKey; label: string; icon: typeof Flame }[] = [
   { key: 'pertinence', label: 'Populaires', icon: Flame },
   { key: 'prix-asc', label: 'Prix croissant', icon: ArrowUp },
@@ -66,52 +66,54 @@ export function ProductsSection() {
 
       {categories.length > 1 && (
         <>
-          {/* Catégories : "Toutes" + soit toutes les catégories (aucun filtre
-              actif), soit uniquement la catégorie sélectionnée avec un ×
-              pour revenir en arrière — comme sur la référence. */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Catégories : texte simple, la sélection se distingue par un
+              soulignement blush — style éditorial plutôt que boutons pleins. */}
+          <div className="scrollbar-none flex items-center gap-6 overflow-x-auto border-b border-black/[0.07] pb-2.5">
             <button
               onClick={() => setCategory(null)}
-              className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
-                category === null ? 'bg-blush text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
+              className={`relative shrink-0 whitespace-nowrap pb-2.5 text-[13px] transition ${
+                category === null ? 'font-semibold text-ink' : 'text-neutral-400 hover:text-ink'
               }`}
             >
               Toutes
+              {category === null && (
+                <span className="absolute inset-x-0 -bottom-[11px] h-[1.5px] bg-blush" />
+              )}
             </button>
-            {(category ? categories.filter((c) => c.name === category) : categories).map((c) => (
+            {categories.map((c) => (
               <button
                 key={c.slug}
                 onClick={() => setCategory(category === c.name ? null : c.name)}
-                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition ${
-                  category === c.name ? 'bg-blush text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
+                className={`relative shrink-0 whitespace-nowrap pb-2.5 text-[13px] transition ${
+                  category === c.name ? 'font-semibold text-ink' : 'text-neutral-400 hover:text-ink'
                 }`}
               >
                 {c.name}
-                {category === c.name && <X size={13} />}
+                {category === c.name && (
+                  <span className="absolute inset-x-0 -bottom-[11px] h-[1.5px] bg-blush" />
+                )}
               </button>
             ))}
           </div>
 
-          <p className="mt-3 text-[12.5px] text-neutral-400">
-            {filtered.length} produit{filtered.length > 1 ? 's' : ''}
-          </p>
-
-          {/* Tri rapide */}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {QUICK_SORTS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setSort(key)}
-                className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-semibold transition ${
-                  sort === key
-                    ? 'bg-ink text-white'
-                    : 'border border-black/10 bg-white text-neutral-500 hover:border-black/20'
-                }`}
-              >
-                <Icon size={13} />
-                {label}
-              </button>
-            ))}
+          <div className="mt-3.5 flex items-center justify-between gap-4">
+            <p className="font-serif text-[13px] italic text-neutral-500">
+              {filtered.length} pièce{filtered.length > 1 ? 's' : ''}
+            </p>
+            <div className="scrollbar-none flex items-center gap-4 overflow-x-auto">
+              {QUICK_SORTS.map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setSort(key)}
+                  className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] transition ${
+                    sort === key ? 'font-semibold text-ink' : 'text-neutral-400 hover:text-ink'
+                  }`}
+                >
+                  <Icon size={13} className={sort === key ? 'text-blush' : ''} />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
