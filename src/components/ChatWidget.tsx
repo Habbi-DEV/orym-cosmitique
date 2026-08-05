@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageCircle, Send, X, Loader2, Sparkles } from 'lucide-react';
 import { askAssistant, isChatConfigured, type ChatMessage } from '../lib/chat';
+import { useKeyboardOpen } from '../lib/useKeyboardOpen';
 
 const WELCOME: ChatMessage = {
   role: 'assistant',
@@ -14,12 +15,19 @@ export default function ChatWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const keyboardOpen = useKeyboardOpen();
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open, loading]);
 
   if (!isChatConfigured) return null; // pas de clé/URL configurée → widget masqué
+  // Le bouton flottant (fermé) se superpose aux champs d'un formulaire
+  // ailleurs sur la page quand le clavier s'ouvre — on le masque tant que
+  // le clavier est ouvert. Le panneau lui-même (une fois ouvert) reste
+  // affiché normalement : son propre champ de saisie ouvre le clavier et
+  // c'est le comportement attendu.
+  if (keyboardOpen && !open) return null;
 
   const send = async () => {
     const text = input.trim();
