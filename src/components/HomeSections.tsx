@@ -41,6 +41,11 @@ const QUICK_SORTS: { key: SortKey; label: string; icon: typeof Flame }[] = [
   { key: 'prix-desc', label: 'Prix décroissant', icon: ArrowDown },
 ];
 
+// Cache la barre de défilement native (Tailwind n'a pas d'utilitaire
+// "scrollbar-none" intégré — la classe utilisée précédemment n'existait
+// pas, laissant la scrollbar système visible en travers du texte).
+const noScrollbarStyle = { scrollbarWidth: 'none' as const, msOverflowStyle: 'none' as const };
+
 export function ProductsSection() {
   const { activeProducts } = useData();
   const [category, setCategory] = useState<string | null>(null);
@@ -68,7 +73,10 @@ export function ProductsSection() {
         <>
           {/* Catégories : texte simple, la sélection se distingue par un
               soulignement blush — style éditorial plutôt que boutons pleins. */}
-          <div className="scrollbar-none flex items-center gap-6 overflow-x-auto border-b border-black/[0.07] pb-2.5">
+          <div
+            style={noScrollbarStyle}
+            className="flex items-center gap-6 overflow-x-auto border-b border-black/[0.07] pb-2.5 [&::-webkit-scrollbar]:hidden"
+          >
             <button
               onClick={() => setCategory(null)}
               className={`relative shrink-0 whitespace-nowrap pb-2.5 text-[13px] transition ${
@@ -97,10 +105,13 @@ export function ProductsSection() {
           </div>
 
           <div className="mt-3.5 flex items-center justify-between gap-4">
-            <p className="font-serif text-[13px] italic text-neutral-500">
+            <p className="shrink-0 whitespace-nowrap font-serif text-[13px] italic text-neutral-500">
               {filtered.length} pièce{filtered.length > 1 ? 's' : ''}
             </p>
-            <div className="scrollbar-none flex items-center gap-4 overflow-x-auto">
+            <div
+              style={noScrollbarStyle}
+              className="flex min-w-0 items-center gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+            >
               {QUICK_SORTS.map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
