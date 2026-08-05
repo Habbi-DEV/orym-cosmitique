@@ -1,8 +1,8 @@
 import { type ReactNode, useMemo, useState } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
+import { Flame, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import ProductCard from './ProductCard';
-import { getCategories, sortProducts, SORT_LABELS, type SortKey } from '../lib/catalog';
+import { getCategories, sortProducts, type SortKey } from '../lib/catalog';
 
 function SectionHead({
   eyebrow,
@@ -33,6 +33,14 @@ function SectionHead({
   );
 }
 
+// Tri rapide affiché en boutons (au lieu d'un <select>) — Populaires /
+// Prix croissant / Prix décroissant, avec icône, comme sur la référence.
+const QUICK_SORTS: { key: SortKey; label: string; icon: typeof Flame }[] = [
+  { key: 'pertinence', label: 'Populaires', icon: Flame },
+  { key: 'prix-asc', label: 'Prix croissant', icon: ArrowUp },
+  { key: 'prix-desc', label: 'Prix décroissant', icon: ArrowDown },
+];
+
 export function ProductsSection() {
   const { activeProducts } = useData();
   const [category, setCategory] = useState<string | null>(null);
@@ -57,49 +65,63 @@ export function ProductsSection() {
       />
 
       {categories.length > 1 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setCategory(null)}
-            className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${
-              category === null ? 'bg-ink text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
-            }`}
-          >
-            Tout
-          </button>
-          {categories.map((c) => (
+        <>
+          {/* Catégories : "Toutes" + soit toutes les catégories (aucun filtre
+              actif), soit uniquement la catégorie sélectionnée avec un ×
+              pour revenir en arrière — comme sur la référence. */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              key={c.slug}
-              onClick={() => setCategory(c.name)}
-              className={`rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${
-                category === c.name ? 'bg-ink text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
+              onClick={() => setCategory(null)}
+              className={`rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                category === null ? 'bg-blush text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
               }`}
             >
-              {c.name} ({c.count})
+              Toutes
             </button>
-          ))}
-          <div className="ml-auto flex items-center gap-1.5">
-            <SlidersHorizontal size={13} className="text-neutral-400" />
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="rounded-full border border-black/8 bg-white px-3 py-1.5 text-[12px] font-semibold text-ink outline-none"
-            >
-              {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
-                <option key={k} value={k}>
-                  {SORT_LABELS[k]}
-                </option>
-              ))}
-            </select>
+            {(category ? categories.filter((c) => c.name === category) : categories).map((c) => (
+              <button
+                key={c.slug}
+                onClick={() => setCategory(category === c.name ? null : c.name)}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                  category === c.name ? 'bg-blush text-white' : 'bg-cream text-neutral-500 hover:bg-black/5'
+                }`}
+              >
+                {c.name}
+                {category === c.name && <X size={13} />}
+              </button>
+            ))}
           </div>
-        </div>
+
+          <p className="mt-3 text-[12.5px] text-neutral-400">
+            {filtered.length} produit{filtered.length > 1 ? 's' : ''}
+          </p>
+
+          {/* Tri rapide */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {QUICK_SORTS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setSort(key)}
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-semibold transition ${
+                  sort === key
+                    ? 'bg-ink text-white'
+                    : 'border border-black/10 bg-white text-neutral-500 hover:border-black/20'
+                }`}
+              >
+                <Icon size={13} />
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {filtered.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-black/10 p-8 text-center text-[13.5px] text-neutral-400">
+        <p className="mt-6 rounded-2xl border border-dashed border-black/10 p-8 text-center text-[13.5px] text-neutral-400">
           Aucun produit dans cette catégorie pour le moment.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {filtered.map((p, i) => (
             <ProductCard key={p.id} product={p} index={i} />
           ))}
