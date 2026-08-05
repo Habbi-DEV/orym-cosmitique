@@ -355,12 +355,13 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [session]);
 
-  // ---------------- Realtime — nouvelle commande en direct ----------------
-  // Écoute les INSERT sur `orders` pendant qu'un membre du staff est
-  // connecté : la commande apparaît dans le tableau de bord sans refresh,
-  // avec une alerte visuelle + sonore. La policy RLS "orders_staff_read"
-  // s'applique aussi au flux Realtime : seuls super_admin/orders reçoivent
-  // l'événement (un marketer ou warehouse ne le verra pas).
+  // ---------------- Realtime — tableau de bord staff en direct ----------------
+  // Un seul channel, actif tant qu'un membre du staff est connecté, écoute
+  // orders (nouvelle commande + alerte sonore), products (stock/prix modifiés
+  // par ce trigger ou une autre session admin) et promotions — pour que
+  // AdminProducts/AdminPromos/AdminDashboard reflètent l'état réel sans
+  // rechargement. La policy RLS "orders_staff_read" s'applique aussi au flux
+  // Realtime : seuls super_admin/orders reçoivent l'événement orders.
   useEffect(() => {
     if (!supabase || !session) return;
     // Alias local : TypeScript ne conserve pas le narrowing du `if` ci-dessus
@@ -370,7 +371,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     // partout ci-dessous, y compris dans les fermetures.
     const client = supabase;
     const channel = client
-      .channel('orders-realtime')
+      .channel('admin-realtime')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'orders' },
@@ -424,17 +425,69 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
             });
         },
       )
+      // Commandes existantes modifiées ailleurs (ex. changement de statut
+      // depuis un autre appareil admin) — met à jour sans nouvelle alerte.
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders' },
+        (payload) => {
+          const incoming = rowToOrder(payload.new as Record<string, unknown>);
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.ref === incoming.ref ? { ...incoming, items: incoming.items.length ? incoming.items : o.items } : o,
+            ),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            const oldId = String((payload.old as Record<string, unknown>).id);
+            setCatalog((prev) => prev.filter((p) => p.dbId !== oldId));
+            return;
+          }
+          const incoming = rowToProduct(payload.new as Record<string, unknown>);
+          setCatalog((prev) => {
+            const idx = prev.findIndex((p) => p.dbId === incoming.dbId);
+            if (idx === -1) return [incoming, ...prev];
+            const next = [...prev];
+            next[idx] = incoming;
+            return next;
+          });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'promotions' },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            const oldCode = (payload.old as Record<string, unknown>).code;
+            setPromos((prev) => prev.filter((p) => p.code !== oldCode));
+            return;
+          }
+          const incoming = rowToPromo(payload.new as Record<string, unknown>);
+          setPromos((prev) => {
+            const idx = prev.findIndex((p) => p.code === incoming.code);
+            if (idx === -1) return [incoming, ...prev];
+            const next = [...prev];
+            next[idx] = incoming;
+            return next;
+          });
+        },
+      )
       .subscribe((status, err) => {
         // Journalise l'état de la connexion Realtime dans la console — utile
         // pour diagnostiquer si la bannière/son de nouvelle commande ne se
         // déclenche pas : SUBSCRIBED = OK ; CHANNEL_ERROR/TIMED_OUT signifie
         // le plus souvent que la réplication n'est pas activée pour la table
-        // `orders` dans Supabase Dashboard → Database → Replication.
+        // concernée dans Supabase Dashboard → Database → Replication.
         if (status === 'SUBSCRIBED') {
-          console.info('%c[realtime]%c Abonné aux nouvelles commandes', 'color:#3ECF8E;font-weight:bold', 'color:inherit');
+          console.info('%c[realtime]%c Tableau de bord admin en direct', 'color:#3ECF8E;font-weight:bold', 'color:inherit');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn(
-            '[realtime] Échec de l’abonnement aux commandes — vérifiez Database → Replication → orders dans Supabase.',
+            '[realtime] Échec de l’abonnement admin — vérifiez Database → Replication dans Supabase.',
             status,
             err,
           );
