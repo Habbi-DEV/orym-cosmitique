@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { History, Search, Plus, Pencil, Trash2 } from 'lucide-react';
-import { fetchAuditLog, type AuditEntry, type AuditAction } from '../lib/audit';
+import { fetchAuditLog, rowToAuditEntry, type AuditEntry, type AuditAction } from '../lib/audit';
+import { supabase } from '../lib/supabase';
 
 const ACTION_META: Record<AuditAction, { icon: React.ElementType; chip: string; label: string }> = {
   create: { icon: Plus, chip: 'bg-stock-soft text-stockgreen', label: 'Création' },
@@ -39,6 +40,28 @@ export default function AdminAuditLog() {
       setEntries(data);
       setLoading(false);
     });
+  }, []);
+
+  // Temps réel : chaque nouvelle ligne d'audit (créée par les triggers SQL
+  // dès qu'un produit/une commande/une promo est modifié, y compris depuis
+  // un autre poste admin) apparaît en tête de liste immédiatement — l'audit
+  // log n'est jamais modifié ni supprimé après coup, donc INSERT suffit.
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel('admin-audit-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'audit_log' },
+        (payload) => {
+          const incoming = rowToAuditEntry(payload.new as Record<string, unknown>);
+          setEntries((prev) => (prev.some((e) => e.id === incoming.id) ? prev : [incoming, ...prev]));
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   const filtered = useMemo(() => {
