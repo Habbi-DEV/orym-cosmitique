@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, BadgePercent, Gift, Truck } from 'lucide-react';
 import { scrollToId } from '../lib/format';
+import { useKeyboardOpen } from '../lib/useKeyboardOpen';
 
 const items = [
   { id: 'accueil', label: 'Accueil', icon: Home, kind: 'scroll' as const },
@@ -16,6 +17,7 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const onHome = location.pathname === '/';
+  const keyboardOpen = useKeyboardOpen();
 
   useEffect(() => {
     if (!onHome) {
@@ -55,6 +57,12 @@ export default function BottomNav() {
       navigate('/', { state: { scrollTo: item.id } });
     }
   };
+
+  // Masquée quand le clavier est ouvert : en position fixed, elle ne se
+  // repositionne pas de façon fiable par rapport au viewport visuel une
+  // fois le clavier affiché et se retrouve à flotter au milieu du contenu
+  // (formulaire de livraison, chat…) au lieu de rester en bas de l'écran.
+  if (keyboardOpen) return null;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 bg-ink pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(12,12,14,0.25)] md:inset-x-auto md:bottom-5 md:left-1/2 md:w-[440px] md:-translate-x-1/2 md:rounded-full md:border md:border-white/10 md:pb-0">
