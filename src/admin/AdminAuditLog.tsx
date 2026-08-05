@@ -48,7 +48,13 @@ export default function AdminAuditLog() {
   // log n'est jamais modifié ni supprimé après coup, donc INSERT suffit.
   useEffect(() => {
     if (!supabase) return;
-    const channel = supabase
+    // Alias local : TypeScript ne conserve pas le narrowing du `if`
+    // ci-dessus à l'intérieur de la fonction de cleanup retournée par
+    // useEffect, car `supabase` est un import de module (SupabaseClient |
+    // null). `client` est une const locale à cet effet, donc son type
+    // non-null reste garanti dans la closure de cleanup.
+    const client = supabase;
+    const channel = client
       .channel('admin-audit-realtime')
       .on(
         'postgres_changes',
@@ -60,7 +66,7 @@ export default function AdminAuditLog() {
       )
       .subscribe();
     return () => {
-      void supabase.removeChannel(channel);
+      void client.removeChannel(channel);
     };
   }, []);
 
