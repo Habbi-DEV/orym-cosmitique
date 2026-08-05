@@ -1,6 +1,10 @@
 import { getWhatsAppUrl } from '../lib/whatsapp';
+import { useKeyboardOpen } from '../lib/useKeyboardOpen';
 
 export default function WhatsAppButton() {
+  const keyboardOpen = useKeyboardOpen();
+  if (keyboardOpen) return null;
+
   return (
     <a
       href={getWhatsAppUrl()}
