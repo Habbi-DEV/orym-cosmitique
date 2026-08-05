@@ -13,6 +13,17 @@ export interface AuditEntry {
   createdAt: number;
 }
 
+export const rowToAuditEntry = (r: Record<string, unknown>): AuditEntry => ({
+  id: r.id as string,
+  actorEmail: (r.actor_email as string) ?? null,
+  action: r.action as AuditAction,
+  entityType: r.entity_type as string,
+  entityId: r.entity_id as string,
+  entityLabel: (r.entity_label as string) ?? null,
+  changes: (r.changes as Record<string, unknown>) ?? {},
+  createdAt: new Date(r.created_at as string).getTime(),
+});
+
 export async function fetchAuditLog(limit = 300): Promise<AuditEntry[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
@@ -24,14 +35,5 @@ export async function fetchAuditLog(limit = 300): Promise<AuditEntry[]> {
     console.warn('[supabase] audit_log.select', error.message);
     return [];
   }
-  return (data ?? []).map((r) => ({
-    id: r.id as string,
-    actorEmail: (r.actor_email as string) ?? null,
-    action: r.action as AuditAction,
-    entityType: r.entity_type as string,
-    entityId: r.entity_id as string,
-    entityLabel: (r.entity_label as string) ?? null,
-    changes: (r.changes as Record<string, unknown>) ?? {},
-    createdAt: new Date(r.created_at as string).getTime(),
-  }));
+  return (data ?? []).map(rowToAuditEntry);
 }
