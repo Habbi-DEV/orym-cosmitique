@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Star, ShieldCheck, Eye, EyeOff, Trash2, Search, MessagesSquare } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { fetchAllReviews, setReviewVisibility, deleteReview } from '../lib/reviews';
+import { supabase } from '../lib/supabase';
 import type { Review } from '../lib/types';
 
 type AdminReview = Review & { productName: string; isVisible: boolean };
@@ -22,6 +23,22 @@ export default function AdminReviews() {
   };
 
   useEffect(load, []);
+
+  // Temps réel : un nouvel avis client (ou une modération faite depuis un
+  // autre poste admin) recharge la liste automatiquement — pas de bouton
+  // "actualiser" à cliquer. La table `reviews` n'expose pas le nom du
+  // produit dans son payload Realtime (pas de jointure), donc on refait un
+  // fetch complet plutôt que de fusionner partiellement.
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel('admin-reviews-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, load)
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
