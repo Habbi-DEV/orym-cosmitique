@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, BadgePercent, Gift, CalendarHeart } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Home, BadgePercent, Gift, Truck } from 'lucide-react';
 import { scrollToId } from '../lib/format';
 
 const items = [
-  { id: 'accueil', label: 'Accueil', icon: Home },
-  { id: 'promos', label: 'Promos', icon: BadgePercent },
-  { id: 'packs', label: 'Packs', icon: Gift },
-  { id: 'evenements', label: 'Événements', icon: CalendarHeart },
+  { id: 'accueil', label: 'Accueil', icon: Home, kind: 'scroll' as const },
+  { id: 'promos', label: 'Promos', icon: BadgePercent, kind: 'scroll' as const },
+  { id: 'packs', label: 'Packs', icon: Gift, kind: 'scroll' as const },
+  { id: 'suivi', label: 'Suivi', icon: Truck, kind: 'route' as const, to: '/suivi' },
 ];
 
 export default function BottomNav() {
   const [active, setActive] = useState('accueil');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const onHome = location.pathname === '/';
 
   useEffect(() => {
+    if (!onHome) {
+      setActive(location.pathname.startsWith('/suivi') ? 'suivi' : '');
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -22,25 +30,42 @@ export default function BottomNav() {
       },
       { rootMargin: '-35% 0px -60% 0px' },
     );
-    items.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+    items
+      .filter((i) => i.kind === 'scroll')
+      .forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
     return () => observer.disconnect();
-  }, []);
+  }, [onHome, location.pathname]);
+
+  // Un item "route" navigue directement (ex. /suivi) ; un item "scroll"
+  // défile jusqu'à la section sur l'accueil, ou navigue vers "/" avec l'id à
+  // atteindre si on est sur une autre page (ScrollManager gère ce state).
+  const go = (item: (typeof items)[number]) => {
+    if (item.kind === 'route') {
+      setActive(item.id);
+      navigate(item.to);
+      return;
+    }
+    if (onHome) {
+      setActive(item.id);
+      scrollToId(item.id);
+    } else {
+      navigate('/', { state: { scrollTo: item.id } });
+    }
+  };
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 bg-ink pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(12,12,14,0.25)] md:inset-x-auto md:bottom-5 md:left-1/2 md:w-[440px] md:-translate-x-1/2 md:rounded-full md:border md:border-white/10 md:pb-0">
       <div className="grid grid-cols-4">
-        {items.map(({ id, label, icon: Icon }) => {
-          const isActive = active === id;
+        {items.map((item) => {
+          const isActive = active === item.id;
+          const Icon = item.icon;
           return (
             <button
-              key={id}
-              onClick={() => {
-                setActive(id);
-                scrollToId(id);
-              }}
+              key={item.id}
+              onClick={() => go(item)}
               className="relative flex flex-col items-center gap-1 py-3"
             >
               {isActive && (
@@ -59,7 +84,7 @@ export default function BottomNav() {
                   isActive ? 'text-white' : 'text-white/40'
                 }`}
               >
-                {label}
+                {item.label}
               </span>
             </button>
           );
