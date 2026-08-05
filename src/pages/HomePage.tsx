@@ -1,5 +1,4 @@
 import Hero from '../components/Hero';
-import CategoryCards from '../components/CategoryCards';
 import { ProductsSection, PromosSection, PacksSection } from '../components/HomeSections';
 import Events from '../components/Events';
 import Footer from '../components/Footer';
@@ -15,7 +14,6 @@ export default function HomePage() {
             Header habituel. */}
         <Hero />
         <ProductsSection />
-        <CategoryCards />
         <PromosSection />
         <PacksSection />
         <Events />
