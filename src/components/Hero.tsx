@@ -16,20 +16,21 @@ export default function Hero() {
           className="aspect-[4/5] w-full object-cover sm:aspect-[16/9] md:aspect-[21/9]"
         />
 
-        {/* Barre logo + icônes flottante directement sur l’image — icônes
-            nues (sans fond circulaire), comme sur la référence fournie. */}
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/35 via-black/5 to-transparent px-4 py-4 sm:px-6">
-          <Link to="/" className="flex flex-col leading-none text-white">
+        {/* Barre logo + icônes flottante directement sur l’image — texte et
+            icônes en noir (pas de dégradé sombre, qui nuirait à leur
+            lisibilité sur fond clair). */}
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 py-4 sm:px-6">
+          <Link to="/" className="flex flex-col leading-none text-ink">
             <span className="font-serif text-[20px] font-bold tracking-tight">
               ORYAM<span className="text-blush">.</span>
             </span>
-            <span className="text-[7.5px] font-semibold tracking-[0.4em] text-white/80">
+            <span className="text-[7.5px] font-semibold tracking-[0.4em] text-ink/70">
               COSMETICS
             </span>
           </Link>
 
           <div className="flex items-center gap-5">
-            <Link to="/wishlist" aria-label="Ma wishlist" className="relative text-white">
+            <Link to="/wishlist" aria-label="Ma wishlist" className="relative text-ink">
               <Heart size={22} className={wishlist.length > 0 ? 'fill-navred text-navred' : ''} />
               {wishlist.length > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
@@ -37,7 +38,7 @@ export default function Hero() {
                 </span>
               )}
             </Link>
-            <button onClick={openCheckout} aria-label="Panier" className="relative text-white">
+            <button onClick={openCheckout} aria-label="Panier" className="relative text-ink">
               <ShoppingBag size={22} />
               {cartCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
