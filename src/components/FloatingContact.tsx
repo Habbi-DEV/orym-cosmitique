@@ -128,131 +128,153 @@ export default function FloatingContact({ showWhatsApp = true }: Props) {
   };
 
   return (
-    <div ref={wrapRef} className="fixed bottom-24 right-4 z-[90] md:bottom-8 md:right-8" dir="rtl">
-      {/* Panneau de chat */}
+    <>
+      {/* Fond derrière le panneau de chat ouvert — masque le reste de la page
+          (barre du bas, contenu…) au lieu de le laisser "percer" derrière le
+          panneau quand le clavier s'ouvre sur son propre champ de saisie
+          (bug WebKit connu : un élément position:fixed contenant un champ
+          actif peut se désaligner de la mise en page au moment où le
+          clavier apparaît). Un vrai fond opaque évite que ce glissement
+          soit visible. */}
       <AnimatePresence>
         {chatOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="mb-3 flex h-[70vh] max-h-[520px] w-[92vw] max-w-[360px] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5"
-          >
-            <div className="flex items-center justify-between bg-ink px-4 py-3.5 text-white">
-              <div className="flex items-center gap-2">
-                <Sparkles size={16} className="text-blush" />
-                <p className="font-serif text-[15px] font-bold">مساعدة ORYAM</p>
-              </div>
-              <button onClick={() => setChatOpen(false)} className="rounded-full p-1 hover:bg-white/10" aria-label="إغلاق">
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="flex-1 space-y-3 overflow-y-auto bg-cream px-4 py-4">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
-                      m.role === 'user' ? 'bg-white text-ink' : 'bg-blush text-white'
-                    }`}
-                  >
-                    {m.content}
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-end">
-                  <div className="flex items-center gap-1.5 rounded-2xl bg-blush/80 px-3.5 py-2.5 text-white">
-                    <Loader2 size={14} className="animate-spin" />
-                  </div>
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-
-            <div className="flex items-center gap-2 border-t border-black/5 bg-white px-3 py-3">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && send()}
-                placeholder="اكتب سؤالك هنا…"
-                className="flex-1 rounded-full bg-cream px-4 py-2.5 text-[13px] outline-none placeholder:text-ink/40"
-              />
-              <button
-                onClick={send}
-                disabled={loading || !input.trim()}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-white disabled:opacity-30"
-                aria-label="إرسال"
-              >
-                <Send size={15} />
-              </button>
-            </div>
-          </motion.div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setChatOpen(false)}
+            className="fixed inset-0 z-[85] bg-black/40 backdrop-blur-[2px]"
+          />
         )}
       </AnimatePresence>
 
-      {/* Dock : sous-boutons WhatsApp + Assistant (uniquement si les deux canaux sont disponibles) */}
-      <div className="relative h-14 w-14">
-        {!singleChannel && (
-          <>
-            <motion.a
-              href={getWhatsAppUrl()}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Discuter sur WhatsApp"
-              initial={false}
-              animate={
-                dockOpen
-                  ? { opacity: 1, scale: 1, y: -78, x: 2, pointerEvents: 'auto' }
-                  : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
-              }
-              transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.04 : 0 }}
-              className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] shadow-xl"
+      <div ref={wrapRef} className="fixed bottom-24 right-4 z-[90] md:bottom-8 md:right-8" dir="rtl">
+        {/* Panneau de chat */}
+        <AnimatePresence>
+          {chatOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="mb-3 flex h-[70vh] max-h-[520px] w-[92vw] max-w-[360px] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5"
             >
-              <WhatsAppIcon />
-            </motion.a>
+              <div className="flex items-center justify-between bg-ink px-4 py-3.5 text-white">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-blush" />
+                  <p className="font-serif text-[15px] font-bold">مساعدة ORYAM</p>
+                </div>
+                <button onClick={() => setChatOpen(false)} className="rounded-full p-1 hover:bg-white/10" aria-label="إغلاق">
+                  <X size={18} />
+                </button>
+              </div>
 
-            <motion.button
-              type="button"
-              aria-label="فتح المساعدة الذكية"
-              initial={false}
-              animate={
-                dockOpen
-                  ? { opacity: 1, scale: 1, y: -52, x: -58, pointerEvents: 'auto' }
-                  : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
-              }
-              transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.1 : 0 }}
-              onClick={() => {
-                setDockOpen(false);
-                setChatOpen(true);
-              }}
-              className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border border-[#3E7BFA]/60 bg-ink shadow-xl"
-            >
-              <AiIcon />
-            </motion.button>
-          </>
-        )}
+              <div className="flex-1 space-y-3 overflow-y-auto bg-cream px-4 py-4">
+                {messages.map((m, i) => (
+                  <div key={i} className={`flex ${m.role === 'user' ? 'justify-start' : 'justify-end'}`}>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
+                        m.role === 'user' ? 'bg-white text-ink' : 'bg-blush text-white'
+                      }`}
+                    >
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {loading && (
+                  <div className="flex justify-end">
+                    <div className="flex items-center gap-1.5 rounded-2xl bg-blush/80 px-3.5 py-2.5 text-white">
+                      <Loader2 size={14} className="animate-spin" />
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
 
-        {/* Tête de robot — bouton principal */}
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.92 }}
-          animate={{ rotate: dockOpen || chatOpen ? 90 : 0 }}
-          onClick={handleMainClick}
-          aria-label="تواصل معنا"
-          className="absolute bottom-0 right-0 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl"
-          style={{
-            background: 'linear-gradient(155deg, #F5F7FA, #C9D3E0 45%, #151A22)',
-            boxShadow: '0 8px 22px rgba(62,123,250,.3), 0 3px 8px rgba(0,0,0,.6)',
-          }}
-        >
-          {!dockOpen && !chatOpen && (
-            <span className="absolute inset-0 animate-ping rounded-full border border-[#9FC0FF]/60" />
+              <div className="flex items-center gap-2 border-t border-black/5 bg-white px-3 py-3">
+                <input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && send()}
+                  placeholder="اكتب سؤالك هنا…"
+                  className="flex-1 rounded-full bg-cream px-4 py-2.5 text-[13px] outline-none placeholder:text-ink/40"
+                />
+                <button
+                  onClick={send}
+                  disabled={loading || !input.trim()}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-white disabled:opacity-30"
+                  aria-label="إرسال"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+            </motion.div>
           )}
-          {chatOpen ? <X size={22} className="text-ink" /> : <LuxeRobotHead />}
-        </motion.button>
+        </AnimatePresence>
+
+        {/* Dock : sous-boutons WhatsApp + Assistant (uniquement si les deux canaux sont disponibles) */}
+        <div className="relative h-14 w-14">
+          {!singleChannel && (
+            <>
+              <motion.a
+                href={getWhatsAppUrl()}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Discuter sur WhatsApp"
+                initial={false}
+                animate={
+                  dockOpen
+                    ? { opacity: 1, scale: 1, y: -78, x: 2, pointerEvents: 'auto' }
+                    : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
+                }
+                transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.04 : 0 }}
+                className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] shadow-xl"
+              >
+                <WhatsAppIcon />
+              </motion.a>
+
+              <motion.button
+                type="button"
+                aria-label="فتح المساعدة الذكية"
+                initial={false}
+                animate={
+                  dockOpen
+                    ? { opacity: 1, scale: 1, y: -52, x: -58, pointerEvents: 'auto' }
+                    : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
+                }
+                transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.1 : 0 }}
+                onClick={() => {
+                  setDockOpen(false);
+                  setChatOpen(true);
+                }}
+                className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border border-[#3E7BFA]/60 bg-ink shadow-xl"
+              >
+                <AiIcon />
+              </motion.button>
+            </>
+          )}
+
+          {/* Tête de robot — bouton principal */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            animate={{ rotate: dockOpen || chatOpen ? 90 : 0 }}
+            onClick={handleMainClick}
+            aria-label="تواصل معنا"
+            className="absolute bottom-0 right-0 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl"
+            style={{
+              background: 'linear-gradient(155deg, #F5F7FA, #C9D3E0 45%, #151A22)',
+              boxShadow: '0 8px 22px rgba(62,123,250,.3), 0 3px 8px rgba(0,0,0,.6)',
+            }}
+          >
+            {!dockOpen && !chatOpen && (
+              <span className="absolute inset-0 animate-ping rounded-full border border-[#9FC0FF]/60" />
+            )}
+            {chatOpen ? <X size={22} className="text-ink" /> : <LuxeRobotHead />}
+          </motion.button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
