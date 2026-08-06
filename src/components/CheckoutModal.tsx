@@ -216,7 +216,7 @@ export default function CheckoutModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={closeCheckout}
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[95] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
         >
           <motion.div
             initial={{ y: 80, opacity: 0, scale: 0.98 }}
