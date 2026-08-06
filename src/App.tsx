@@ -12,8 +12,7 @@ import LoyaltyPage from './pages/LoyaltyPage';
 import LandingPage from './pages/LandingPage';
 import CheckoutModal from './components/CheckoutModal';
 import Toast from './components/Toast';
-import ChatWidget from './components/ChatWidget';
-import WhatsAppButton from './components/WhatsAppButton';
+import FloatingContact from './components/FloatingContact';
 import AdminLayout from './admin/AdminLayout';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
@@ -42,16 +41,12 @@ function ScrollManager() {
   return null;
 }
 
-function ChatWidgetGate() {
+function FloatingContactGate() {
   const location = useLocation();
-  if (location.pathname.startsWith('/admin')) return null; // pas de chatbot côté administration
-  return <ChatWidget />;
-}
-
-function WhatsAppButtonGate() {
-  const location = useLocation();
-  if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/lp/')) return null;
-  return <WhatsAppButton />;
+  if (location.pathname.startsWith('/admin')) return null; // rien côté administration
+  // Sur les landing pages (/lp/*), on garde uniquement l'assistant, pas WhatsApp
+  const showWhatsApp = !location.pathname.startsWith('/lp/');
+  return <FloatingContact showWhatsApp={showWhatsApp} />;
 }
 
 export default function App() {
@@ -89,8 +84,7 @@ export default function App() {
           </Routes>
           <CheckoutModal />
           <Toast />
-          <ChatWidgetGate />
-          <WhatsAppButtonGate />
+          <FloatingContactGate />
         </BrowserRouter>
       </StoreProvider>
     </DataProvider>
