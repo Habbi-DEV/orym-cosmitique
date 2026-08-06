@@ -213,67 +213,75 @@ export default function FloatingContact({ showWhatsApp = true }: Props) {
           )}
         </AnimatePresence>
 
-        {/* Dock : sous-boutons WhatsApp + Assistant (uniquement si les deux canaux sont disponibles) */}
-        <div className="relative h-14 w-14">
-          {!singleChannel && (
-            <>
-              <motion.a
-                href={getWhatsAppUrl()}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Discuter sur WhatsApp"
-                initial={false}
-                animate={
-                  dockOpen
-                    ? { opacity: 1, scale: 1, y: -78, x: 2, pointerEvents: 'auto' }
-                    : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
-                }
-                transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.04 : 0 }}
-                className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] shadow-xl"
-              >
-                <WhatsAppIcon />
-              </motion.a>
+        {/* Dock : sous-boutons WhatsApp + Assistant, et bouton rond principal.
+            Masqué quand le clavier ET le chat sont ouverts en même temps :
+            ce bouton, toujours position:fixed, se désolidarise visuellement
+            du panneau au-dessus de lui à cause d'un bug WebKit connu (un
+            élément fixed contenant/à côté d'un champ actif se désaligne au
+            moment où le clavier apparaît). Le panneau garde de toute façon
+            son propre bouton de fermeture dans son en-tête. */}
+        {!(keyboardOpen && chatOpen) && (
+          <div className="relative h-14 w-14">
+            {!singleChannel && (
+              <>
+                <motion.a
+                  href={getWhatsAppUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Discuter sur WhatsApp"
+                  initial={false}
+                  animate={
+                    dockOpen
+                      ? { opacity: 1, scale: 1, y: -78, x: 2, pointerEvents: 'auto' }
+                      : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
+                  }
+                  transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.04 : 0 }}
+                  className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full bg-[#25D366] shadow-xl"
+                >
+                  <WhatsAppIcon />
+                </motion.a>
 
-              <motion.button
-                type="button"
-                aria-label="فتح المساعدة الذكية"
-                initial={false}
-                animate={
-                  dockOpen
-                    ? { opacity: 1, scale: 1, y: -52, x: -58, pointerEvents: 'auto' }
-                    : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
-                }
-                transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.1 : 0 }}
-                onClick={() => {
-                  setDockOpen(false);
-                  setChatOpen(true);
-                }}
-                className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border border-[#3E7BFA]/60 bg-ink shadow-xl"
-              >
-                <AiIcon />
-              </motion.button>
-            </>
-          )}
-
-          {/* Tête de robot — bouton principal */}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            animate={{ rotate: dockOpen || chatOpen ? 90 : 0 }}
-            onClick={handleMainClick}
-            aria-label="تواصل معنا"
-            className="absolute bottom-0 right-0 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl"
-            style={{
-              background: 'linear-gradient(155deg, #F5F7FA, #C9D3E0 45%, #151A22)',
-              boxShadow: '0 8px 22px rgba(62,123,250,.3), 0 3px 8px rgba(0,0,0,.6)',
-            }}
-          >
-            {!dockOpen && !chatOpen && (
-              <span className="absolute inset-0 animate-ping rounded-full border border-[#9FC0FF]/60" />
+                <motion.button
+                  type="button"
+                  aria-label="فتح المساعدة الذكية"
+                  initial={false}
+                  animate={
+                    dockOpen
+                      ? { opacity: 1, scale: 1, y: -52, x: -58, pointerEvents: 'auto' }
+                      : { opacity: 0, scale: 0.3, y: 0, x: 0, pointerEvents: 'none' }
+                  }
+                  transition={{ type: 'spring', stiffness: 400, damping: 26, delay: dockOpen ? 0.1 : 0 }}
+                  onClick={() => {
+                    setDockOpen(false);
+                    setChatOpen(true);
+                  }}
+                  className="absolute bottom-0 right-0 flex h-11 w-11 items-center justify-center rounded-full border border-[#3E7BFA]/60 bg-ink shadow-xl"
+                >
+                  <AiIcon />
+                </motion.button>
+              </>
             )}
-            {chatOpen ? <X size={22} className="text-ink" /> : <LuxeRobotHead />}
-          </motion.button>
-        </div>
+
+            {/* Tête de robot — bouton principal */}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.92 }}
+              animate={{ rotate: dockOpen || chatOpen ? 90 : 0 }}
+              onClick={handleMainClick}
+              aria-label="تواصل معنا"
+              className="absolute bottom-0 right-0 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl"
+              style={{
+                background: 'linear-gradient(155deg, #F5F7FA, #C9D3E0 45%, #151A22)',
+                boxShadow: '0 8px 22px rgba(62,123,250,.3), 0 3px 8px rgba(0,0,0,.6)',
+              }}
+            >
+              {!dockOpen && !chatOpen && (
+                <span className="absolute inset-0 animate-ping rounded-full border border-[#9FC0FF]/60" />
+              )}
+              {chatOpen ? <X size={22} className="text-ink" /> : <LuxeRobotHead />}
+            </motion.button>
+          </div>
+        )}
       </div>
     </>
   );
