@@ -36,6 +36,14 @@ export interface CatalogProduct extends Product {
   // products.id côté base (order_items.product_id, reviews.product_id).
   // Absent en mode démo local (sans Supabase).
   dbId?: string;
+  // Contenu arabe optionnel (site bilingue FR/AR) — repli sur le champ
+  // français si absent. Voir localizeProduct() dans lib/i18n-product.ts.
+  nameAr?: string;
+  categoryAr?: string;
+  shortDescAr?: string;
+  descriptionAr?: string;
+  ingredientsAr?: string;
+  usageAr?: string;
 }
 
 // ---------------- Commandes ----------------
