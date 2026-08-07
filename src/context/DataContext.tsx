@@ -131,6 +131,13 @@ const rowToProduct = (r: Record<string, unknown>): CatalogProduct => ({
   costPrice: Number(r.cost_price) || 0,
   isActive: r.is_active !== false,
   variants: [],
+  // Contenu arabe optionnel (site bilingue FR/AR) — voir lib/i18n-product.ts
+  nameAr: (r.name_ar as string) || undefined,
+  categoryAr: (r.category_ar as string) || undefined,
+  shortDescAr: (r.short_desc_ar as string) || undefined,
+  descriptionAr: (r.description_ar as string) || undefined,
+  ingredientsAr: (r.ingredients_ar as string) || undefined,
+  usageAr: (r.usage_ar as string) || undefined,
 });
 
 const rowToOrder = (r: Record<string, unknown>): Order => ({
@@ -210,6 +217,12 @@ const remoteUpsertProduct = (p: CatalogProduct) => {
         usage: p.usage,
         is_active: p.isActive,
         promo: p.promo,
+        name_ar: p.nameAr ?? null,
+        category_ar: p.categoryAr ?? null,
+        short_desc_ar: p.shortDescAr ?? null,
+        description_ar: p.descriptionAr ?? null,
+        ingredients_ar: p.ingredientsAr ?? null,
+        usage_ar: p.usageAr ?? null,
       },
       { onConflict: 'slug' },
     )
@@ -700,36 +713,11 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
           promo_code: order.promoCode ?? null,
           status: 'en_attente',
         });
-        // ⚠️ Bug trouvé et corrigé ici : l'ancien code chaînait
-        // `.select('id').single()` après l'insert pour récupérer l'id généré
-        // par la base. Or PostgREST doit alors relire la ligne (RETURNING),
-        // ce qui déclenche la policy SELECT `orders_staff_read` — que réussit
-        // seulement le staff connecté. Résultat : pour un visiteur normal
-        // (non connecté), PostgREST rejetait l'INSERT ENTIER avec "new row
-        // violates row-level security policy for table orders", alors que la
-        // policy d'écriture `orders_public_insert` (with check (true)) était
-        // elle-même correcte — la commande n'était donc écrite QUE quand un
-        // admin avait une session ouverte au même moment sur le même client.
-        // En générant l'uuid côté client et en n'appelant plus jamais
-        // `.select()` après l'insert, on n'a plus besoin d'aucune permission
-        // de lecture pour finaliser une commande.
         if (error) {
           console.warn('[supabase] orders.insert', error.message);
           return;
         }
         if (input.items.length > 0) {
-          // ⚠️ Bug trouvé et corrigé ici : `i.productId` est le SLUG
-          // applicatif (ex. "serum-eclat"), pas l'UUID réel de la table
-          // `products`. order_items.product_id est une colonne `uuid`
-          // (FK products.id) : y insérer un slug provoquait une erreur
-          // Postgres silencieuse (avalée par le `console.warn` ci-dessous),
-          // laissant systématiquement product_id à NULL. Conséquence directe
-          // en cascade : le trigger de décrément de stock (qui joint sur
-          // order_items.product_id = products.id) ne trouvait jamais de
-          // ligne à mettre à jour, et la vérification "Achat vérifié" des
-          // avis clients ne pouvait jamais rattacher une commande à un
-          // produit. On résout le vrai uuid via le catalogue local (déjà
-          // hydraté avec `dbId` — voir rowToProduct) avant l'insertion.
           const { error: itemsErr } = await supabase.from('order_items').insert(
             input.items.map((i) => ({
               order_id: dbOrderId,
@@ -978,8 +966,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     );
 
   // ---------------- Méta ----------------
-  // Avant : ne mettait à jour que le state local (jamais persisté en base,
-  // donc réinitialisé à vide à chaque nouvelle session/appareil admin).
   const setMetaConfig = (cfg: MetaConfig) => {
     setMetaConfigState(cfg);
     if (supabase) {
