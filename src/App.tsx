@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import { StoreProvider } from './context/StoreContext';
+import { LanguageProvider } from './context/LanguageContext';
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
 import WishlistPage from './pages/WishlistPage';
@@ -51,42 +52,44 @@ function FloatingContactGate() {
 
 export default function App() {
   return (
-    <DataProvider>
-      <StoreProvider>
-        <BrowserRouter>
-          <ScrollManager />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/produit/:id" element={<ProductPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/confirmation" element={<ConfirmationPage />} />
-            <Route path="/suivi" element={<TrackOrderPage />} />
-            <Route path="/categories" element={<CategoriesPage />} />
-            <Route path="/categories/:slug" element={<CategoriesPage />} />
-            <Route path="/parrainage" element={<LoyaltyPage />} />
-            <Route path="/lp/:id" element={<LandingPage />} />
+    <LanguageProvider>
+      <DataProvider>
+        <StoreProvider>
+          <BrowserRouter>
+            <ScrollManager />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/produit/:id" element={<ProductPage />} />
+              <Route path="/wishlist" element={<WishlistPage />} />
+              <Route path="/confirmation" element={<ConfirmationPage />} />
+              <Route path="/suivi" element={<TrackOrderPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/categories/:slug" element={<CategoriesPage />} />
+              <Route path="/parrainage" element={<LoyaltyPage />} />
+              <Route path="/lp/:id" element={<LandingPage />} />
 
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="commandes" element={<AdminOrders />} />
-              <Route path="clients" element={<AdminCustomers />} />
-              <Route path="produits" element={<AdminProducts />} />
-              <Route path="promotions" element={<AdminPromos />} />
-              <Route path="avis" element={<AdminReviews />} />
-              <Route path="journal" element={<AdminAuditLog />} />
-              <Route path="inventaire" element={<AdminInventory />} />
-              <Route path="paniers-abandonnes" element={<AdminAbandonedCarts />} />
-              <Route path="parametres" element={<AdminSettings />} />
-            </Route>
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="commandes" element={<AdminOrders />} />
+                <Route path="clients" element={<AdminCustomers />} />
+                <Route path="produits" element={<AdminProducts />} />
+                <Route path="promotions" element={<AdminPromos />} />
+                <Route path="avis" element={<AdminReviews />} />
+                <Route path="journal" element={<AdminAuditLog />} />
+                <Route path="inventaire" element={<AdminInventory />} />
+                <Route path="paniers-abandonnes" element={<AdminAbandonedCarts />} />
+                <Route path="parametres" element={<AdminSettings />} />
+              </Route>
 
-            <Route path="*" element={<HomePage />} />
-          </Routes>
-          <CheckoutModal />
-          <Toast />
-          <FloatingContactGate />
-        </BrowserRouter>
-      </StoreProvider>
-    </DataProvider>
+              <Route path="*" element={<HomePage />} />
+            </Routes>
+            <CheckoutModal />
+            <Toast />
+            <FloatingContactGate />
+          </BrowserRouter>
+        </StoreProvider>
+      </DataProvider>
+    </LanguageProvider>
   );
 }
