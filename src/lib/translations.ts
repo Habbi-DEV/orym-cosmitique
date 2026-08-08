@@ -49,6 +49,18 @@ export const translations = {
     footer: {
       rights: 'Tous droits réservés.',
     },
+    promosSection: {
+      eyebrow: 'Offres Limitées',
+      title: 'Promotions',
+      sub: 'Profitez de remises exceptionnelles sur une sélection de nos soins iconiques.',
+      chip: 'JUSQU’À -30%',
+    },
+    packsSection: {
+      eyebrow: 'Rituels Complets',
+      title: 'Packs & Coffrets',
+      sub: 'Nos routines signature réunies dans des coffrets élégants, jusqu’à 25% moins chers que les produits séparés.',
+      chip: 'IDÉE CADEAU',
+    },
     admin: {
       dashboard: 'Tableau de bord',
       commandes: 'Commandes',
@@ -107,6 +119,18 @@ export const translations = {
     },
     footer: {
       rights: 'جميع الحقوق محفوظة.',
+    },
+    promosSection: {
+      eyebrow: 'عروض محدودة',
+      title: 'العروض الترويجية',
+      sub: 'استفيدي من تخفيضات استثنائية على مجموعة مختارة من منتجاتنا المميزة.',
+      chip: 'حتى -30%',
+    },
+    packsSection: {
+      eyebrow: 'روتين متكامل',
+      title: 'الباقات والمجموعات',
+      sub: 'روتيناتنا المميزة مجمّعة في باقات أنيقة، بسعر أقل حتى 25% من شراء المنتجات منفصلة.',
+      chip: 'فكرة هدية',
     },
     admin: {
       dashboard: 'لوحة القيادة',
