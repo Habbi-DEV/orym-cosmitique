@@ -2,18 +2,22 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Heart, ShoppingBag } from 'lucide-react';
-import type { Product } from '../data/products';
+import type { CatalogProduct } from '../lib/types';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
+import { localizeProduct } from '../lib/i18n-product';
 import { formatDA, promoPercent } from '../lib/format';
 import { track } from '../lib/meta';
 
-export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+export default function ProductCard({ product, index = 0 }: { product: CatalogProduct; index?: number }) {
   const navigate = useNavigate();
   const { addToCart, openCheckout, toggleWishlist, isWished } = useStore();
+  const { lang, t } = useLang();
   const [imgIndex, setImgIndex] = useState(0);
   const wished = isWished(product.id);
   const percent = promoPercent(product.price, product.oldPrice);
   const hasMultiple = product.images.length > 1;
+  const view = localizeProduct(product, lang);
 
   const prev = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -50,7 +54,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           animate={{ opacity: 1 }}
           transition={{ duration: 0.35 }}
           src={product.images[imgIndex]}
-          alt={product.name}
+          alt={view.name}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
@@ -61,7 +65,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
             product.type === 'pack' ? 'bg-violetp' : 'bg-tagblue'
           }`}
         >
-          {product.type === 'pack' ? 'Pack' : 'Produit'}
+          {product.type === 'pack' ? t('product.pack') : t('product.produit')}
         </span>
 
         {percent && (
@@ -72,7 +76,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
 
         {/* Wishlist (sole top-right action) */}
         <button
-          aria-label="Ajouter aux favoris"
+          aria-label={t('nav.wishlist')}
           onClick={(e) => {
             e.stopPropagation();
             toggleWishlist(product.id);
@@ -110,12 +114,12 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
         <h3
           onClick={() => navigate(`/produit/${product.id}`)}
           className="cursor-pointer truncate font-serif text-[15.5px] font-semibold leading-snug tracking-tight transition-colors hover:text-blush"
-          title={product.name}
+          title={view.name}
         >
-          {product.name}
+          {view.name}
         </h3>
         <p className="mt-1 min-h-[30px] text-[11.5px] leading-relaxed text-neutral-500 line-clamp-2">
-          {product.shortDesc}
+          {view.shortDesc}
         </p>
 
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
@@ -134,12 +138,12 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-stockgreen opacity-60" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-stockgreen" />
               </span>
-              En stock
+              {t('product.enStock')}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-semibold text-navred">
               <span className="h-1.5 w-1.5 rounded-full bg-navred" />
-              Rupture de stock
+              {t('product.rupture')}
             </span>
           )}
         </div>
@@ -150,7 +154,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-2.5 text-[12.5px] font-semibold text-white transition hover:bg-black active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:hover:bg-neutral-300"
         >
           <ShoppingBag size={14} />
-          {product.inStock ? 'Commander' : 'Indisponible'}
+          {product.inStock ? t('product.commander') : t('product.indisponible')}
         </button>
       </div>
     </motion.article>
