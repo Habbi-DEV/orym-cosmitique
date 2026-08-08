@@ -18,35 +18,38 @@ import {
   MessageSquareText,
   Users,
   History,
+  Languages,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLang } from '../context/LanguageContext';
+import type { TranslationKey } from '../lib/translations';
 import { ROLE_LABELS, type AdminRole } from '../lib/types';
 import AdminOrderAlert from './AdminOrderAlert';
 
 interface NavItem {
   to: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: React.ElementType;
   roles: AdminRole[];
   end?: boolean;
 }
 
 export const NAV: NavItem[] = [
-  { to: '/admin', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['super_admin', 'marketer'], end: true },
-  { to: '/admin/commandes', label: 'Commandes', icon: ClipboardList, roles: ['super_admin', 'orders'] },
-  { to: '/admin/clients', label: 'Clients', icon: Users, roles: ['super_admin', 'orders', 'marketer'] },
-  { to: '/admin/produits', label: 'Produits', icon: Package, roles: ['super_admin'] },
-  { to: '/admin/promotions', label: 'Promos & Packs', icon: BadgePercent, roles: ['super_admin', 'marketer'] },
-  { to: '/admin/avis', label: 'Avis clients', icon: MessageSquareText, roles: ['super_admin', 'marketer'] },
-  { to: '/admin/journal', label: "Journal d'audit", icon: History, roles: ['super_admin'] },
-  { to: '/admin/inventaire', label: 'Inventaire', icon: Warehouse, roles: ['super_admin', 'warehouse'] },
+  { to: '/admin', labelKey: 'admin.dashboard', icon: LayoutDashboard, roles: ['super_admin', 'marketer'], end: true },
+  { to: '/admin/commandes', labelKey: 'admin.commandes', icon: ClipboardList, roles: ['super_admin', 'orders'] },
+  { to: '/admin/clients', labelKey: 'admin.clients', icon: Users, roles: ['super_admin', 'orders', 'marketer'] },
+  { to: '/admin/produits', labelKey: 'admin.produits', icon: Package, roles: ['super_admin'] },
+  { to: '/admin/promotions', labelKey: 'admin.promotions', icon: BadgePercent, roles: ['super_admin', 'marketer'] },
+  { to: '/admin/avis', labelKey: 'admin.avis', icon: MessageSquareText, roles: ['super_admin', 'marketer'] },
+  { to: '/admin/journal', labelKey: 'admin.journal', icon: History, roles: ['super_admin'] },
+  { to: '/admin/inventaire', labelKey: 'admin.inventaire', icon: Warehouse, roles: ['super_admin', 'warehouse'] },
   {
     to: '/admin/paniers-abandonnes',
-    label: 'Paniers abandonnés',
+    labelKey: 'admin.paniers',
     icon: ShoppingCart,
     roles: ['super_admin', 'marketer'],
   },
-  { to: '/admin/parametres', label: 'Paramètres', icon: Settings, roles: ['super_admin'] },
+  { to: '/admin/parametres', labelKey: 'admin.parametres', icon: Settings, roles: ['super_admin'] },
 ];
 
 export const homeForRole = (role: AdminRole): string =>
@@ -54,6 +57,7 @@ export const homeForRole = (role: AdminRole): string =>
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { session, logout, orders, lowStock } = useData();
+  const { lang, setLang, t } = useLang();
   if (!session) return null;
   const items = NAV.filter((n) => n.roles.includes(session.role));
   const pendingOrders = orders.filter((o) => o.status === 'en_attente').length;
@@ -67,18 +71,27 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       {/* Brand */}
-      <div className="px-6 pb-6 pt-7">
-        <p className="font-serif text-[24px] font-bold text-white">
-          ORYAM<span className="text-blush">.</span>
-        </p>
-        <p className="mt-0.5 text-[8.5px] font-semibold tracking-[0.4em] text-white/35">
-          ADMINISTRATION
-        </p>
+      <div className="flex items-start justify-between px-6 pb-6 pt-7">
+        <div>
+          <p className="font-serif text-[24px] font-bold text-white">
+            ORYAM<span className="text-blush">.</span>
+          </p>
+          <p className="mt-0.5 text-[8.5px] font-semibold tracking-[0.4em] text-white/35">
+            {t('admin.administration')}
+          </p>
+        </div>
+        <button
+          onClick={() => setLang(lang === 'fr' ? 'ar' : 'fr')}
+          className="flex items-center gap-1 rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-bold text-white/70 transition hover:text-white"
+        >
+          <Languages size={13} />
+          {lang === 'fr' ? 'AR' : 'FR'}
+        </button>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-3">
-        {items.map(({ to, label, icon: Icon, end }) => {
+        {items.map(({ to, labelKey, icon: Icon, end }) => {
           const badge = badgeFor(to);
           return (
             <NavLink
@@ -101,7 +114,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     />
                   )}
                   <Icon size={17} className={isActive ? 'text-blush' : ''} />
-                  <span className="flex-1">{label}</span>
+                  <span className="flex-1">{t(labelKey)}</span>
                   {badge && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1.5 text-[10px] font-bold text-white">
                       {badge}
@@ -121,7 +134,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           className="flex items-center justify-center gap-2 rounded-xl bg-blush px-4 py-3 text-[12.5px] font-bold text-white shadow-lg shadow-blush/25 transition hover:bg-blush-dark"
         >
           <Globe size={15} />
-          Retour à la boutique
+          {t('admin.voirLaBoutique')}
         </Link>
       </div>
 
@@ -136,8 +149,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <button
           onClick={logout}
-          aria-label="Se déconnecter"
-          title="Se déconnecter"
+          aria-label={t('admin.seDeconnecter')}
+          title={t('admin.seDeconnecter')}
           className="text-white/40 transition hover:text-navred"
         >
           <LogOut size={16} />
@@ -149,22 +162,23 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 function AccessDenied() {
   const { session } = useData();
+  const { t } = useLang();
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-blush-soft text-blush">
         <Lock size={26} />
       </span>
-      <h1 className="mt-5 font-serif text-3xl font-semibold">Accès restreint</h1>
+      <h1 className="mt-5 font-serif text-3xl font-semibold">{t('admin.accesRestreint')}</h1>
       <p className="mt-2 max-w-sm text-[13.5px] text-neutral-500">
-        Votre rôle actuel ({session ? ROLE_LABELS[session.role] : '—'}) ne donne pas accès à
-        ce module. Contactez le Super Admin pour élargir vos permissions.
+        {t('admin.accesRestreintSub')}{' '}
+        {session && `(${ROLE_LABELS[session.role]})`}
       </p>
       {session && (
         <Link
           to={homeForRole(session.role)}
           className="mt-6 rounded-full bg-ink px-6 py-3 text-[13px] font-bold text-white transition hover:bg-black"
         >
-          Revenir à mon espace
+          {t('admin.revenirEspace')}
         </Link>
       )}
     </div>
@@ -173,6 +187,7 @@ function AccessDenied() {
 
 export default function AdminLayout() {
   const { session, sessionLoading } = useData();
+  const { t } = useLang();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -185,9 +200,7 @@ export default function AdminLayout() {
           ORYAM<span className="text-blush">.</span>
         </p>
         <Loader2 size={26} className="mt-5 animate-spin text-blush" />
-        <p className="mt-3 text-[12px] text-white/40">
-          Restauration de la session sécurisée…
-        </p>
+        <p className="mt-3 text-[12px] text-white/40">{t('admin.restaurationSession')}</p>
       </div>
     );
   }
@@ -213,7 +226,7 @@ export default function AdminLayout() {
       <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-black/8 bg-ink px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          aria-label="Ouvrir le menu"
+          aria-label="Menu"
           className="flex h-9 w-9 items-center justify-center rounded-lg text-white"
         >
           <Menu size={19} />
@@ -224,7 +237,7 @@ export default function AdminLayout() {
         </p>
         <Link
           to="/"
-          aria-label="Retour à la boutique"
+          aria-label={t('admin.voirLaBoutique')}
           className="flex h-9 w-9 items-center justify-center rounded-lg bg-blush text-white"
         >
           <Globe size={16} />
@@ -251,7 +264,7 @@ export default function AdminLayout() {
             >
               <button
                 onClick={() => setMobileOpen(false)}
-                aria-label="Fermer le menu"
+                aria-label={t('common.fermer')}
                 className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-white/60 hover:text-white"
               >
                 <X size={18} />
