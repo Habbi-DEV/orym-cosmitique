@@ -6,11 +6,13 @@ import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import { useStore } from '../context/StoreContext';
 import { useData } from '../context/DataContext';
+import { useLang } from '../context/LanguageContext';
 import { track } from '../lib/meta';
 
 export default function WishlistPage() {
   const { wishlist, addToCart, openCheckout, showToast } = useStore();
   const { getProduct, activeProducts } = useData();
+  const { t } = useLang();
 
   const wished = wishlist
     .map((id) => getProduct(id))
@@ -19,11 +21,7 @@ export default function WishlistPage() {
   const addAll = () => {
     wished.forEach((p) => addToCart(p.id, 1));
     track('AddToCart', { content_ids: wished.map((p) => p.id), value: wished.reduce((s, p) => s + p.price, 0), currency: 'DZD' });
-    showToast(
-      wished.length > 1
-        ? `${wished.length} produits ajoutés au panier`
-        : 'Produit ajouté au panier',
-    );
+    showToast(wished.length > 1 ? `${wished.length} ${t('wishlistPage.toastPlusieurs')}` : t('wishlistPage.toastUn'));
     openCheckout();
   };
 
@@ -34,15 +32,13 @@ export default function WishlistPage() {
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-              Vos coups de cœur
+              {t('wishlistPage.eyebrow')}
             </p>
             <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-              Ma <span className="italic text-blush">Wishlist</span>
+              {t('wishlistPage.title')}
             </h1>
             <p className="mt-2 max-w-md text-[13.5px] text-neutral-500">
-              {wished.length > 0
-                ? `${wished.length} soin(s) enregistré(s) — ajoutez-les au panier quand vous êtes prête.`
-                : 'Touchez le cœur sur un produit pour le retrouver ici, prêt à commander.'}
+              {wished.length > 0 ? `${wished.length} ${t('wishlistPage.subWithItems')}` : t('wishlistPage.subEmpty')}
             </p>
           </div>
           {wished.length > 0 && (
@@ -51,7 +47,7 @@ export default function WishlistPage() {
               className="flex items-center gap-2 rounded-full bg-blush px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-blush/30 transition hover:bg-blush-dark active:scale-[0.98]"
             >
               <ShoppingBag size={15} />
-              Tout ajouter au panier
+              {t('wishlistPage.toutAjouter')}
             </button>
           )}
         </div>
@@ -71,20 +67,17 @@ export default function WishlistPage() {
             <span className="flex h-20 w-20 items-center justify-center rounded-full bg-blush-soft text-blush">
               <Heart size={34} />
             </span>
-            <h2 className="mt-5 font-serif text-2xl font-semibold">
-              Votre wishlist est encore vide
-            </h2>
+            <h2 className="mt-5 font-serif text-2xl font-semibold">{t('wishlistPage.videTitle')}</h2>
             <p className="mt-2 max-w-sm text-[13.5px] leading-relaxed text-neutral-500">
-              Explorez la collection et touchez le cœur sur vos soins préférés pour les
-              retrouver ici.
+              {t('wishlistPage.videSub')}
             </p>
             <Link
               to="/"
               state={{ scrollTo: 'produits' }}
               className="group mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-black"
             >
-              Découvrir la collection
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              {t('wishlistPage.decouvrirCollection')}
+              <ArrowRight size={16} className="rtl:rotate-180 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </Link>
           </motion.div>
         )}
@@ -94,7 +87,7 @@ export default function WishlistPage() {
           <section className="mt-4 pb-10">
             <p className="mb-4 flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.22em] text-neutral-400">
               <Sparkles size={14} className="text-blush" />
-              Suggestions pour compléter votre rituel
+              {t('wishlistPage.suggestions')}
             </p>
             <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 sm:gap-5">
               {activeProducts
