@@ -1,8 +1,10 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { Flame, ArrowUp, ArrowDown } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLang } from '../context/LanguageContext';
 import ProductCard from './ProductCard';
 import { getCategories, sortProducts, type SortKey } from '../lib/catalog';
+import type { TranslationKey } from '../lib/translations';
 
 function SectionHead({
   eyebrow,
@@ -35,10 +37,10 @@ function SectionHead({
 
 // Tri rapide — icône + texte minimal (pas de fond plein), dans le même
 // esprit éditorial que les catégories ci-dessous.
-const QUICK_SORTS: { key: SortKey; label: string; icon: typeof Flame }[] = [
-  { key: 'pertinence', label: 'Populaires', icon: Flame },
-  { key: 'prix-asc', label: 'Prix croissant', icon: ArrowUp },
-  { key: 'prix-desc', label: 'Prix décroissant', icon: ArrowDown },
+const QUICK_SORTS: { key: SortKey; labelKey: TranslationKey; icon: typeof Flame }[] = [
+  { key: 'pertinence', labelKey: 'filters.populaires', icon: Flame },
+  { key: 'prix-asc', labelKey: 'filters.prixCroissant', icon: ArrowUp },
+  { key: 'prix-desc', labelKey: 'filters.prixDecroissant', icon: ArrowDown },
 ];
 
 // Cache la barre de défilement native (Tailwind n'a pas d'utilitaire
@@ -48,9 +50,17 @@ const noScrollbarStyle = { scrollbarWidth: 'none' as const, msOverflowStyle: 'no
 
 export function ProductsSection() {
   const { activeProducts } = useData();
+  const { t, lang } = useLang();
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>('pertinence');
   const categories = useMemo(() => getCategories(activeProducts), [activeProducts]);
+
+  // Libellé de catégorie localisé — categoryAr (si renseigné côté admin)
+  // porté par au moins un produit de cette catégorie, sinon repli FR.
+  const categoryLabel = (name: string) => {
+    if (lang === 'fr') return name;
+    return activeProducts.find((p) => p.category === name)?.categoryAr || name;
+  };
 
   const filtered = useMemo(() => {
     const base = category ? activeProducts.filter((p) => p.category === category) : activeProducts;
@@ -60,13 +70,17 @@ export function ProductsSection() {
   return (
     <section id="produits" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-14 sm:px-6">
       <SectionHead
-        eyebrow="Notre Collection"
+        eyebrow={t('hero.collection')}
         title={
-          <>
-            Nos <span className="italic text-blush">Produits</span>
-          </>
+          lang === 'fr' ? (
+            <>
+              Nos <span className="italic text-blush">Produits</span>
+            </>
+          ) : (
+            <span className="italic text-blush">{t('hero.title')}</span>
+          )
         }
-        sub="Des formules concentrées en actifs naturels, pour chaque besoin de votre peau."
+        sub={t('hero.sub')}
       />
 
       {categories.length > 1 && (
@@ -83,7 +97,7 @@ export function ProductsSection() {
                 category === null ? 'font-semibold text-ink' : 'text-neutral-400 hover:text-ink'
               }`}
             >
-              Toutes
+              {t('filters.toutes')}
               {category === null && (
                 <span className="absolute inset-x-0 -bottom-[11px] h-[1.5px] bg-blush" />
               )}
@@ -96,7 +110,7 @@ export function ProductsSection() {
                   category === c.name ? 'font-semibold text-ink' : 'text-neutral-400 hover:text-ink'
                 }`}
               >
-                {c.name}
+                {categoryLabel(c.name)}
                 {category === c.name && (
                   <span className="absolute inset-x-0 -bottom-[11px] h-[1.5px] bg-blush" />
                 )}
@@ -106,13 +120,13 @@ export function ProductsSection() {
 
           <div className="mt-3.5 flex items-center justify-between gap-4">
             <p className="shrink-0 whitespace-nowrap font-serif text-[13px] italic text-neutral-500">
-              {filtered.length} pièce{filtered.length > 1 ? 's' : ''}
+              {filtered.length} {t(filtered.length > 1 ? 'filters.pieces' : 'filters.piece')}
             </p>
             <div
               style={noScrollbarStyle}
               className="flex min-w-0 items-center gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden"
             >
-              {QUICK_SORTS.map(({ key, label, icon: Icon }) => (
+              {QUICK_SORTS.map(({ key, labelKey, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setSort(key)}
@@ -121,7 +135,7 @@ export function ProductsSection() {
                   }`}
                 >
                   <Icon size={13} className={sort === key ? 'text-blush' : ''} />
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
             </div>
@@ -131,7 +145,7 @@ export function ProductsSection() {
 
       {filtered.length === 0 ? (
         <p className="mt-6 rounded-2xl border border-dashed border-black/10 p-8 text-center text-[13.5px] text-neutral-400">
-          Aucun produit dans cette catégorie pour le moment.
+          {t('filters.aucunProduit')}
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
@@ -146,15 +160,16 @@ export function ProductsSection() {
 
 export function PromosSection() {
   const { promoProducts } = useData();
+  const { t } = useLang();
   if (promoProducts.length === 0) return null;
   return (
     <section id="promos" className="scroll-mt-20 bg-blush-soft/70">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <SectionHead
-          eyebrow="Offres Limitées"
-          title={<span className="text-[#8E4254]">Promotions</span>}
-          sub="Profitez de remises exceptionnelles sur une sélection de nos soins iconiques."
-          chip={{ text: 'JUSQU’À -30%', classes: 'bg-navred text-white' }}
+          eyebrow={t('promosSection.eyebrow')}
+          title={<span className="text-[#8E4254]">{t('promosSection.title')}</span>}
+          sub={t('promosSection.sub')}
+          chip={{ text: t('promosSection.chip'), classes: 'bg-navred text-white' }}
         />
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {promoProducts.map((p, i) => (
@@ -168,15 +183,16 @@ export function PromosSection() {
 
 export function PacksSection() {
   const { packProducts } = useData();
+  const { t } = useLang();
   if (packProducts.length === 0) return null;
   return (
     <section id="packs" className="scroll-mt-20 bg-violetp-soft/70">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         <SectionHead
-          eyebrow="Rituels Complets"
-          title={<span className="text-violetp-dark">Packs & Coffrets</span>}
-          sub="Nos routines signature réunies dans des coffrets élégants, jusqu’à 25% moins chers que les produits séparés."
-          chip={{ text: 'IDÉE CADEAU', classes: 'bg-violetp text-white' }}
+          eyebrow={t('packsSection.eyebrow')}
+          title={<span className="text-violetp-dark">{t('packsSection.title')}</span>}
+          sub={t('packsSection.sub')}
+          chip={{ text: t('packsSection.chip'), classes: 'bg-violetp text-white' }}
         />
         <div className="grid grid-cols-2 gap-3.5 sm:gap-5 lg:max-w-3xl">
           {packProducts.map((p, i) => (
