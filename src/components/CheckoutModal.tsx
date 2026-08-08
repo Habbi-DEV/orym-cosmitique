@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useData } from '../context/DataContext';
+import { useLang } from '../context/LanguageContext';
+import { localizeProduct } from '../lib/i18n-product';
 import { formatDA, scrollToId } from '../lib/format';
 import { track } from '../lib/meta';
 
@@ -36,8 +38,6 @@ interface OrderSnapshot {
 const inputCls =
   'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-[13.5px] outline-none transition placeholder:text-neutral-400 focus:border-blush focus:ring-2 focus:ring-blush/20';
 
-const steps = ['Panier', 'Livraison', 'Confirmation'];
-
 export default function CheckoutModal() {
   const {
     checkoutOpen,
@@ -55,8 +55,11 @@ export default function CheckoutModal() {
     createOrder,
     incrementPromoUsage,
   } = useData();
+  const { lang, t } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const steps = [t('checkout.stepPanier'), t('checkout.stepLivraison'), t('checkout.stepConfirmation')];
 
   const [step, setStep] = useState<Step>(1);
   const [order, setOrder] = useState<OrderSnapshot | null>(null);
@@ -112,15 +115,15 @@ export default function CheckoutModal() {
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
-    if (form.name.trim().length < 3) e.name = 'Veuillez saisir votre nom complet';
+    if (form.name.trim().length < 3) e.name = t('checkout.errNom');
     const digits = form.phone.replace(/[\s.-]/g, '');
-    if (!/^(?:\+213|0)(5|6|7)\d{8}$/.test(digits)) e.phone = 'Numéro invalide (ex : 0550123456)';
-    if (!wilaya) e.wilaya = 'Choisissez votre wilaya';
-    else if (!commune) e.commune = 'Choisissez votre commune';
+    if (!/^(?:\+213|0)(5|6|7)\d{8}$/.test(digits)) e.phone = t('checkout.errTel');
+    if (!wilaya) e.wilaya = t('checkout.errWilaya');
+    else if (!commune) e.commune = t('checkout.errCommune');
     if (form.delivery === 'domicile' && form.address.trim().length < 5)
-      e.address = 'Adresse complète requise';
+      e.address = t('checkout.errAdresse');
     return e;
-  }, [form, wilaya, commune]);
+  }, [form, wilaya, commune, t]);
 
   const applyPromo = () => {
     if (!promoInput.trim()) return;
@@ -233,21 +236,21 @@ export default function CheckoutModal() {
                   {step === 2 && (
                     <button
                       onClick={() => setStep(1)}
-                      aria-label="Retour au panier"
+                      aria-label={t('checkout.retourPanier')}
                       className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 text-neutral-500 transition hover:bg-cream"
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft size={16} className="rtl:rotate-180" />
                     </button>
                   )}
                   <h2 className="font-serif text-2xl font-semibold">
-                    {step === 1 && 'Votre Panier'}
-                    {step === 2 && 'Livraison'}
-                    {step === 3 && 'Confirmation'}
+                    {step === 1 && t('checkout.panierTitle')}
+                    {step === 2 && t('checkout.livraisonTitle')}
+                    {step === 3 && t('checkout.confirmationTitle')}
                   </h2>
                 </div>
                 <button
                   onClick={closeCheckout}
-                  aria-label="Fermer"
+                  aria-label={t('common.fermer')}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-neutral-500 transition hover:bg-neutral-200"
                 >
                   <X size={16} />
@@ -300,15 +303,14 @@ export default function CheckoutModal() {
                       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-blush-soft text-blush">
                         <ShoppingBag size={26} />
                       </span>
-                      <p className="mt-4 font-serif text-xl font-semibold">Votre panier est vide</p>
-                      <p className="mt-1 text-[13px] text-neutral-500">
-                        Découvrez nos soins et ajoutez vos favoris.
-                      </p>
+                      <p className="mt-4 font-serif text-xl font-semibold">{t('checkout.panierVide')}</p>
+                      <p className="mt-1 text-[13px] text-neutral-500">{t('checkout.panierVideSub')}</p>
                     </div>
                   ) : (
                     cart.map((item) => {
                       const p = getProduct(item.id);
                       if (!p) return null;
+                      const view = localizeProduct(p, lang);
                       return (
                         <div
                           key={item.id}
@@ -316,18 +318,18 @@ export default function CheckoutModal() {
                         >
                           <img
                             src={p.images[0]}
-                            alt={p.name}
+                            alt={view.name}
                             className="h-16 w-16 shrink-0 rounded-xl bg-cream object-cover"
                           />
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-serif text-[14.5px] font-semibold leading-tight">
-                              {p.name}
+                              {view.name}
                             </p>
                             <p className="mt-0.5 text-[12px] text-neutral-500">{formatDA(p.price)}</p>
                             <div className="mt-1.5 flex items-center gap-2">
                               <div className="flex items-center gap-2.5 rounded-full border border-neutral-200 px-2 py-1">
                                 <button
-                                  aria-label="Diminuer"
+                                  aria-label="-"
                                   onClick={() => updateQty(item.id, item.qty - 1)}
                                   className="text-neutral-500 transition hover:text-ink active:scale-90"
                                 >
@@ -337,7 +339,7 @@ export default function CheckoutModal() {
                                   {item.qty}
                                 </span>
                                 <button
-                                  aria-label="Augmenter"
+                                  aria-label="+"
                                   onClick={() => updateQty(item.id, item.qty + 1)}
                                   className="text-neutral-500 transition hover:text-ink active:scale-90"
                                 >
@@ -350,7 +352,7 @@ export default function CheckoutModal() {
                             </div>
                           </div>
                           <button
-                            aria-label="Retirer"
+                            aria-label="X"
                             onClick={() => removeFromCart(item.id)}
                             className="self-start p-1 text-neutral-300 transition hover:text-navred"
                           >
@@ -366,13 +368,13 @@ export default function CheckoutModal() {
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-200 py-3.5 text-[13px] font-semibold text-neutral-400 transition hover:border-blush hover:text-blush"
                   >
                     <Plus size={15} />
-                    Ajouter un autre produit
+                    {t('checkout.ajouterAutreProduit')}
                   </button>
                 </div>
 
                 <div className="border-t border-neutral-100 px-5 py-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-[13px] text-neutral-500">Sous-total</span>
+                    <span className="text-[13px] text-neutral-500">{t('checkout.sousTotal')}</span>
                     <span className="text-[15px] font-extrabold">{formatDA(cartTotal)}</span>
                   </div>
                   <button
@@ -384,7 +386,7 @@ export default function CheckoutModal() {
                         : 'bg-ink text-white hover:bg-black'
                     }`}
                   >
-                    Continuer vers la livraison
+                    {t('checkout.continuerLivraison')}
                   </button>
                 </div>
               </>
@@ -396,12 +398,12 @@ export default function CheckoutModal() {
                 <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
                   {/* Gender */}
                   <div>
-                    {label('Civilité')}
+                    {label(t('checkout.civilite'))}
                     <div className="grid grid-cols-2 gap-2">
                       {(
                         [
-                          { v: 'madame', t: 'Madame' },
-                          { v: 'monsieur', t: 'Monsieur' },
+                          { v: 'madame', t: t('checkout.madame') },
+                          { v: 'monsieur', t: t('checkout.monsieur') },
                         ] as const
                       ).map((g) => (
                         <button
@@ -421,11 +423,11 @@ export default function CheckoutModal() {
                   </div>
 
                   <div>
-                    {label('Nom complet')}
+                    {label(t('checkout.nomComplet'))}
                     <input
                       value={form.name}
                       onChange={(e) => set('name', e.target.value)}
-                      placeholder="Ex : Amina Kaci"
+                      placeholder={t('checkout.nomPlaceholder')}
                       className={inputCls}
                     />
                     {attempted && errors.name && (
@@ -434,11 +436,11 @@ export default function CheckoutModal() {
                   </div>
 
                   <div>
-                    {label('Téléphone')}
+                    {label(t('checkout.telephone'))}
                     <input
                       value={form.phone}
                       onChange={(e) => set('phone', e.target.value)}
-                      placeholder="Ex : 05 50 12 34 56"
+                      placeholder={t('checkout.telPlaceholder')}
                       inputMode="tel"
                       className={inputCls}
                     />
@@ -449,7 +451,7 @@ export default function CheckoutModal() {
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      {label('Wilaya')}
+                      {label(t('checkout.wilaya'))}
                       <div className="relative">
                         <select
                           value={form.wilaya}
@@ -458,7 +460,7 @@ export default function CheckoutModal() {
                           }}
                           className={`${inputCls} appearance-none pr-9 ${form.wilaya === '' ? 'text-neutral-400' : ''}`}
                         >
-                          <option value="">Choisir…</option>
+                          <option value="">{t('checkout.choisir')}</option>
                           {rates.map((w) => (
                             <option key={w.code} value={String(w.code)}>
                               {String(w.code).padStart(2, '0')} — {w.name}
@@ -475,7 +477,7 @@ export default function CheckoutModal() {
                       )}
                     </div>
                     <div>
-                      {label('Commune / Daïra')}
+                      {label(t('checkout.commune'))}
                       <div className="relative">
                         <select
                           value={form.commune}
@@ -486,7 +488,7 @@ export default function CheckoutModal() {
                           }`}
                         >
                           <option value="">
-                            {wilaya ? 'Choisir…' : 'Wilaya d’abord'}
+                            {wilaya ? t('checkout.choisir') : t('checkout.wilayaDabord')}
                           </option>
                           {wilaya?.communes.map((co) => (
                             <option key={co.name} value={co.name}>
@@ -507,7 +509,7 @@ export default function CheckoutModal() {
 
                   {/* Delivery type */}
                   <div>
-                    {label('Mode de livraison')}
+                    {label(t('checkout.modeLivraison'))}
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => set('delivery', 'domicile')}
@@ -518,7 +520,7 @@ export default function CheckoutModal() {
                         }`}
                       >
                         <span className="flex items-center gap-1.5 text-[13px] font-bold">
-                          <Home size={14} /> À domicile
+                          <Home size={14} /> {t('checkout.domicile')}
                         </span>
                         <span
                           className={`text-[12px] font-semibold ${wilaya ? 'text-blush' : 'text-neutral-400'}`}
@@ -535,7 +537,7 @@ export default function CheckoutModal() {
                         }`}
                       >
                         <span className="flex items-center gap-1.5 text-[13px] font-bold">
-                          <Store size={14} /> Point relais
+                          <Store size={14} /> {t('checkout.pointRelais')}
                         </span>
                         <span
                           className={`text-[12px] font-semibold ${wilaya ? 'text-blush' : 'text-neutral-400'}`}
@@ -548,11 +550,11 @@ export default function CheckoutModal() {
 
                   {form.delivery === 'domicile' && (
                     <div>
-                      {label('Adresse complète')}
+                      {label(t('checkout.adresseComplete'))}
                       <input
                         value={form.address}
                         onChange={(e) => set('address', e.target.value)}
-                        placeholder="Rue, immeuble, point de repère…"
+                        placeholder={t('checkout.adressePlaceholder')}
                         className={inputCls}
                       />
                       {attempted && errors.address && (
@@ -563,12 +565,12 @@ export default function CheckoutModal() {
 
                   {/* Promo code */}
                   <div>
-                    {label('Code promo')}
+                    {label(t('checkout.codePromo'))}
                     {promoApplied ? (
                       <div className="flex items-center justify-between rounded-xl border border-stockgreen/40 bg-stock-soft px-4 py-3">
                         <span className="flex items-center gap-2 text-[13px] font-bold text-stockgreen">
                           <TicketPercent size={16} />
-                          {promoApplied.code} appliqué
+                          {promoApplied.code} {t('checkout.applique')}
                         </span>
                         <span className="flex items-center gap-3">
                           <span className="text-[13px] font-extrabold text-stockgreen">
@@ -576,7 +578,7 @@ export default function CheckoutModal() {
                           </span>
                           <button
                             onClick={() => setPromoApplied(null)}
-                            aria-label="Retirer le code"
+                            aria-label={t('checkout.retirerCode')}
                             className="text-stockgreen/60 transition hover:text-stockgreen"
                           >
                             <X size={15} />
@@ -591,14 +593,14 @@ export default function CheckoutModal() {
                             setPromoInput(e.target.value.toUpperCase());
                             setPromoError('');
                           }}
-                          placeholder="Ex : ORYAM10"
+                          placeholder={t('checkout.promoPlaceholder')}
                           className={`${inputCls} uppercase`}
                         />
                         <button
                           onClick={applyPromo}
                           className="shrink-0 rounded-xl bg-ink px-4 text-[12.5px] font-bold text-white transition hover:bg-black active:scale-[0.97]"
                         >
-                          Appliquer
+                          {t('checkout.appliquerBtn')}
                         </button>
                       </div>
                     )}
@@ -610,23 +612,28 @@ export default function CheckoutModal() {
                   {/* Recap */}
                   <div className="rounded-2xl bg-cream p-4">
                     <div className="flex items-center justify-between text-[13px] text-neutral-500">
-                      <span>Sous-total</span>
+                      <span>{t('checkout.sousTotal')}</span>
                       <span className="font-semibold text-ink">{formatDA(cartTotal)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="mt-1.5 flex items-center justify-between text-[13px] text-stockgreen">
-                        <span>Réduction ({promoApplied?.code})</span>
+                        <span>
+                          {t('checkout.reduction')} ({promoApplied?.code})
+                        </span>
                         <span className="font-semibold">-{formatDA(discount)}</span>
                       </div>
                     )}
                     <div className="mt-1.5 flex items-center justify-between text-[13px] text-neutral-500">
-                      <span>Livraison{wilaya ? ` · ${wilaya.name}` : ''}</span>
+                      <span>
+                        {t('checkout.livraisonLabel')}
+                        {wilaya ? ` · ${wilaya.name}` : ''}
+                      </span>
                       <span className="font-semibold text-ink">
                         {shipping !== null ? formatDA(shipping) : '—'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
-                      <span className="text-[13px] font-bold">Total à payer</span>
+                      <span className="text-[13px] font-bold">{t('checkout.totalAPayer')}</span>
                       <motion.span
                         key={grandTotal}
                         initial={{ scale: 1.12, color: '#D68D9C' }}
@@ -636,9 +643,7 @@ export default function CheckoutModal() {
                         {formatDA(grandTotal)}
                       </motion.span>
                     </div>
-                    <p className="mt-1.5 text-[11px] text-neutral-400">
-                      Paiement en espèces à la livraison.
-                    </p>
+                    <p className="mt-1.5 text-[11px] text-neutral-400">{t('checkout.paiementEspeces')}</p>
                   </div>
                 </div>
 
@@ -647,7 +652,7 @@ export default function CheckoutModal() {
                     onClick={confirmOrder}
                     className="w-full rounded-full bg-blush py-3.5 text-[14px] font-bold text-white shadow-lg shadow-blush/30 transition hover:bg-blush-dark active:scale-[0.98]"
                   >
-                    Commander maintenant · {formatDA(grandTotal)}
+                    {t('checkout.commanderMaintenant')} · {formatDA(grandTotal)}
                   </button>
                 </div>
               </>
@@ -666,36 +671,36 @@ export default function CheckoutModal() {
                     <Check size={38} className="text-stockgreen" strokeWidth={2.6} />
                   </motion.span>
                   <h3 className="mt-5 font-serif text-[26px] font-semibold">
-                    Merci, {order.firstName}
+                    {t('checkout.merci')}, {order.firstName}
                   </h3>
                   <span className="mt-2 rounded-full bg-blush-soft px-4 py-1.5 text-[12px] font-bold tracking-wide text-[#8E4254]">
-                    Référence : {order.ref}
+                    {t('checkout.reference')} : {order.ref}
                   </span>
                   <p className="mt-4 max-w-[280px] text-[13.5px] leading-relaxed text-neutral-500">
-                    Votre commande est bien reçue. Notre équipe vous appellera au{' '}
-                    <span className="font-semibold text-ink">{order.phone}</span> pour confirmer la
-                    livraison à {order.commune}, {order.wilaya}.
+                    {t('checkout.commandeRecuePre')}{' '}
+                    <span className="font-semibold text-ink">{order.phone}</span>{' '}
+                    {t('checkout.commandeRecuePost')} {order.commune}, {order.wilaya}.
                   </p>
 
                   <div className="mt-6 w-full rounded-2xl bg-cream p-4 text-[13px]">
                     <div className="flex justify-between text-neutral-500">
-                      <span>Total produits</span>
+                      <span>{t('checkout.totalProduits')}</span>
                       <span className="font-semibold text-ink">
                         {formatDA(order.total - order.shipping + order.discount)}
                       </span>
                     </div>
                     {order.discount > 0 && (
                       <div className="mt-1.5 flex justify-between text-stockgreen">
-                        <span>Réduction</span>
+                        <span>{t('checkout.reduction')}</span>
                         <span className="font-semibold">-{formatDA(order.discount)}</span>
                       </div>
                     )}
                     <div className="mt-1.5 flex justify-between text-neutral-500">
-                      <span>Livraison</span>
+                      <span>{t('checkout.livraisonLabel')}</span>
                       <span className="font-semibold text-ink">{formatDA(order.shipping)}</span>
                     </div>
                     <div className="mt-3 flex justify-between border-t border-black/10 pt-3">
-                      <span className="font-bold">Payé à la livraison</span>
+                      <span className="font-bold">{t('checkout.payeALaLivraison')}</span>
                       <span className="text-[15px] font-extrabold">{formatDA(order.total)}</span>
                     </div>
                   </div>
@@ -707,7 +712,7 @@ export default function CheckoutModal() {
                     }}
                     className="mt-6 w-full rounded-full bg-ink py-3.5 text-[14px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
                   >
-                    Continuer mes achats
+                    {t('checkout.continuerAchats')}
                   </button>
                 </div>
               </div>
