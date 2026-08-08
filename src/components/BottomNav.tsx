@@ -4,12 +4,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, BadgePercent, Gift, Truck } from 'lucide-react';
 import { scrollToId } from '../lib/format';
 import { useKeyboardOpen } from '../lib/useKeyboardOpen';
+import { useLang } from '../context/LanguageContext';
+import type { TranslationKey } from '../lib/translations';
 
 const items = [
-  { id: 'accueil', label: 'Accueil', icon: Home, kind: 'scroll' as const },
-  { id: 'promos', label: 'Promos', icon: BadgePercent, kind: 'scroll' as const },
-  { id: 'packs', label: 'Packs', icon: Gift, kind: 'scroll' as const },
-  { id: 'suivi', label: 'Suivi', icon: Truck, kind: 'route' as const, to: '/suivi' },
+  { id: 'accueil', labelKey: 'nav.accueil' as TranslationKey, icon: Home, kind: 'scroll' as const },
+  { id: 'promos', labelKey: 'nav.promos' as TranslationKey, icon: BadgePercent, kind: 'scroll' as const },
+  { id: 'packs', labelKey: 'nav.packs' as TranslationKey, icon: Gift, kind: 'scroll' as const },
+  { id: 'suivi', labelKey: 'nav.suivi' as TranslationKey, icon: Truck, kind: 'route' as const, to: '/suivi' },
 ];
 
 export default function BottomNav() {
@@ -18,6 +20,7 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const onHome = location.pathname === '/';
   const keyboardOpen = useKeyboardOpen();
+  const { t } = useLang();
 
   useEffect(() => {
     if (!onHome) {
@@ -92,7 +95,7 @@ export default function BottomNav() {
                   isActive ? 'text-white' : 'text-white/40'
                 }`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </button>
           );
