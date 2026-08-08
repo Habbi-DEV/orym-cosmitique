@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Instagram, ShoppingBag, ArrowLeft, Heart } from 'lucide-react';
+import { Instagram, ShoppingBag, ArrowLeft, Heart, Languages } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
 import { getWhatsAppUrl } from '../lib/whatsapp';
 
 export default function Header() {
   const { cartCount, openCheckout, wishlist } = useStore();
+  const { lang, setLang, t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
   const isProduct = location.pathname.startsWith('/produit');
@@ -16,7 +18,7 @@ export default function Header() {
           {isProduct && (
             <button
               onClick={() => navigate(-1)}
-              aria-label="Retour"
+              aria-label={t('common.retour')}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-ink transition hover:bg-cream"
             >
               <ArrowLeft size={16} />
@@ -33,6 +35,15 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Sélecteur de langue — même bouton que sur le hero de l'accueil,
+              pour rester accessible sur toutes les pages. */}
+          <button
+            onClick={() => setLang(lang === 'fr' ? 'ar' : 'fr')}
+            className="flex h-9 items-center gap-1 rounded-full border border-black/8 bg-white px-2.5 text-[11px] font-bold text-ink transition hover:border-blush hover:text-blush"
+          >
+            <Languages size={14} />
+            {lang === 'fr' ? 'AR' : 'FR'}
+          </button>
           <a
             href="https://www.instagram.com"
             target="_blank"
@@ -55,7 +66,7 @@ export default function Header() {
           </a>
           <Link
             to="/wishlist"
-            aria-label="Ma wishlist"
+            aria-label={t('nav.wishlist')}
             className="relative flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-ink transition hover:border-navred hover:text-navred"
           >
             <Heart size={16} className={wishlist.length > 0 ? 'fill-navred text-navred' : ''} />
@@ -67,11 +78,11 @@ export default function Header() {
           </Link>
           <button
             onClick={openCheckout}
-            aria-label="Panier"
+            aria-label={t('nav.panier')}
             className="relative flex h-9 items-center gap-2 rounded-full bg-ink px-4 text-white transition hover:bg-black"
           >
             <ShoppingBag size={15} />
-            <span className="hidden text-xs font-semibold sm:block">Panier</span>
+            <span className="hidden text-xs font-semibold sm:block">{t('nav.panier')}</span>
             {cartCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1 text-[10px] font-bold text-white shadow">
                 {cartCount}
