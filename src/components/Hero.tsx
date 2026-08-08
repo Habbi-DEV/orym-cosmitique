@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Languages } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
 
 export default function Hero() {
   const { cartCount, openCheckout, wishlist } = useStore();
+  const { lang, setLang, t } = useLang();
 
   return (
     <section id="accueil" className="scroll-mt-20">
@@ -30,7 +32,17 @@ export default function Hero() {
           </Link>
 
           <div className="flex items-center gap-5">
-            <Link to="/wishlist" aria-label="Ma wishlist" className="relative text-ink">
+            {/* Sélecteur de langue FR/AR — persiste le choix et bascule le
+                site (+ layout) en RTL pour l'arabe. Voir LanguageContext. */}
+            <button
+              onClick={() => setLang(lang === 'fr' ? 'ar' : 'fr')}
+              aria-label={t('nav.accueil')}
+              className="flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-bold text-ink backdrop-blur"
+            >
+              <Languages size={13} />
+              {lang === 'fr' ? 'AR' : 'FR'}
+            </button>
+            <Link to="/wishlist" aria-label={t('nav.wishlist')} className="relative text-ink">
               <Heart size={22} className={wishlist.length > 0 ? 'fill-navred text-navred' : ''} />
               {wishlist.length > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
@@ -38,7 +50,7 @@ export default function Hero() {
                 </span>
               )}
             </Link>
-            <button onClick={openCheckout} aria-label="Panier" className="relative text-ink">
+            <button onClick={openCheckout} aria-label={t('nav.panier')} className="relative text-ink">
               <ShoppingBag size={22} />
               {cartCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
