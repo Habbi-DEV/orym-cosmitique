@@ -21,6 +21,8 @@ import ProductCard from '../components/ProductCard';
 import ProductReviews from '../components/ProductReviews';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
+import { localizeProduct } from '../lib/i18n-product';
 import { formatDA, promoPercent } from '../lib/format';
 import { track } from '../lib/meta';
 
@@ -75,6 +77,7 @@ export default function ProductPage() {
   const { getProduct, links } = useData();
   const product = id ? getProduct(id) : undefined;
   const { addToCart, openCheckout, toggleWishlist, isWished, showToast } = useStore();
+  const { lang, t } = useLang();
 
   const [imgIndex, setImgIndex] = useState(0);
   const [qty, setQty] = useState(1);
@@ -101,15 +104,13 @@ export default function ProductPage() {
       <div className="flex min-h-screen flex-col">
         <Header />
         <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <p className="font-serif text-3xl font-semibold">Produit introuvable</p>
-          <p className="mt-2 text-sm text-neutral-500">
-            Ce soin n’existe plus ou a été déplacé.
-          </p>
+          <p className="font-serif text-3xl font-semibold">{t('productPage.introuvable')}</p>
+          <p className="mt-2 text-sm text-neutral-500">{t('productPage.introuvableSub')}</p>
           <Link
             to="/"
             className="mt-6 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white"
           >
-            Retour à la boutique
+            {t('productPage.retourBoutique')}
           </Link>
         </div>
         <Footer />
@@ -117,6 +118,7 @@ export default function ProductPage() {
     );
   }
 
+  const view = localizeProduct(product, lang);
   const wished = isWished(product.id);
   const percent = promoPercent(product.price, product.oldPrice);
   const hasMultiple = product.images.length > 1;
@@ -144,7 +146,7 @@ export default function ProductPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
                 src={product.images[imgIndex]}
-                alt={product.name}
+                alt={view.name}
                 className="aspect-square w-full object-cover"
               />
               <span
@@ -152,11 +154,11 @@ export default function ProductPage() {
                   product.type === 'pack' ? 'bg-violetp' : 'bg-tagblue'
                 }`}
               >
-                {product.type === 'pack' ? 'Pack' : 'Produit'}
+                {product.type === 'pack' ? t('product.pack') : t('product.produit')}
               </span>
               {/* Wishlist (sole top-right action) */}
               <button
-                aria-label="Ajouter aux favoris"
+                aria-label={t('nav.wishlist')}
                 onClick={() => toggleWishlist(product.id)}
                 className={`absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-xl shadow-[0_2px_12px_rgba(12,12,14,0.18)] backdrop-blur transition active:scale-90 ${
                   wished ? 'bg-navred text-white' : 'bg-white/95 text-ink hover:text-navred'
@@ -198,7 +200,7 @@ export default function ProductPage() {
                 >
                   <img
                     src={img}
-                    alt={`${product.name} — vue ${i + 1}`}
+                    alt={`${view.name} — ${i + 1}`}
                     className="h-20 w-20 object-cover sm:h-24 sm:w-24"
                   />
                 </button>
@@ -212,7 +214,7 @@ export default function ProductPage() {
               Oryam Cosmetics
             </p>
             <h1 className="mt-2 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-[44px] sm:leading-[1.15]">
-              {product.name}
+              {view.name}
             </h1>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -234,7 +236,7 @@ export default function ProductPage() {
                 href="#avis"
                 className="text-[12.5px] text-neutral-400 underline decoration-dotted underline-offset-2 transition hover:text-blush"
               >
-                ({product.reviews} avis vérifiés)
+                ({product.reviews} {t('product.avisVerifies')})
               </a>
             </div>
 
@@ -261,18 +263,18 @@ export default function ProductPage() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-stockgreen opacity-60" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-stockgreen" />
                   </span>
-                  En stock — expédié sous 24h
+                  {t('productPage.expedie24h')}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-[11.5px] font-semibold text-navred">
                   <span className="h-1.5 w-1.5 rounded-full bg-navred" />
-                  Rupture de stock
+                  {t('product.rupture')}
                 </span>
               )}
             </div>
 
             <p className="mt-5 text-[14.5px] leading-relaxed text-neutral-600">
-              {product.description}
+              {view.description}
             </p>
 
             {/* Quantity + CTA */}
@@ -301,43 +303,43 @@ export default function ProductPage() {
               >
                 <ShoppingBag size={17} className="shrink-0" />
                 <span className="truncate">
-                  {product.inStock ? `Commander · ${formatDA(product.price * qty)}` : 'Indisponible'}
+                  {product.inStock
+                    ? `${t('product.commander')} · ${formatDA(product.price * qty)}`
+                    : t('product.indisponible')}
                 </span>
               </button>
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-[12px] text-neutral-500">
               <ShieldCheck size={14} className="shrink-0 text-stockgreen" />
-              Paiement à la livraison · Retour sous 7 jours si produit non ouvert
+              {t('productPage.garantie')}
             </div>
 
             {/* Accordions */}
             <div className="mt-8 border-t border-black/[0.07]">
               <Accordion
                 icon={Leaf}
-                title="Ingrédients"
+                title={t('productPage.ingredients')}
                 open={openAcc === 'ingredients'}
                 onToggle={() => toggleAcc('ingredients')}
               >
-                {product.ingredients}
+                {view.ingredients}
               </Accordion>
               <Accordion
                 icon={Droplets}
-                title="Conseils d’utilisation"
+                title={t('productPage.usage')}
                 open={openAcc === 'usage'}
                 onToggle={() => toggleAcc('usage')}
               >
-                {product.usage}
+                {view.usage}
               </Accordion>
               <Accordion
                 icon={Truck}
-                title="Livraison & Retours"
+                title={t('productPage.livraisonRetours')}
                 open={openAcc === 'delivery'}
                 onToggle={() => toggleAcc('delivery')}
               >
-                Livraison vers les 58 wilayas en 24h à 72h, à domicile ou au point relais.
-                Paiement en espèces à la réception. Retour accepté sous 7 jours pour tout produit
-                non ouvert — notre équipe vous accompagne dans la procédure.
+                {t('productPage.livraisonTexte')}
               </Accordion>
             </div>
           </div>
@@ -354,18 +356,18 @@ export default function ProductPage() {
           <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-                Complétez votre rituel
+                {t('productPage.completezRituel')}
               </p>
               <h2 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-                Vous aimerez <span className="italic text-blush">aussi</span>
+                {t('productPage.aussiAimer')}
               </h2>
             </div>
             <Link
               to="/"
-              onClick={() => showToast('Retour à la boutique')}
+              onClick={() => showToast(t('productPage.retourBoutique'))}
               className="text-[13px] font-bold text-ink underline decoration-blush decoration-2 underline-offset-4 transition hover:text-blush"
             >
-              Voir toute la collection
+              {t('productPage.voirCollection')}
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
@@ -409,7 +411,7 @@ export default function ProductPage() {
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 px-4 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-xl md:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-medium text-neutral-400">{product.name}</p>
+            <p className="truncate text-[11px] font-medium text-neutral-400">{view.name}</p>
             <p className="text-[16px] font-extrabold leading-tight">
               {formatDA(product.price * qty)}
             </p>
@@ -420,7 +422,7 @@ export default function ProductPage() {
             className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-[13.5px] font-bold text-white transition hover:bg-black active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:hover:bg-neutral-300"
           >
             <ShoppingBag size={16} />
-            {product.inStock ? 'Commander' : 'Indisponible'}
+            {product.inStock ? t('product.commander') : t('product.indisponible')}
           </button>
         </div>
       </div>
