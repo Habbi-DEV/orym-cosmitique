@@ -10,7 +10,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import { ORDER_STATUS_LABELS } from '../lib/types';
+import { useLang } from '../context/LanguageContext';
 import { formatDA } from '../lib/format';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -23,6 +23,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AdminDashboard() {
   const { orders, lowStock, catalog, session, ledger, wishlistStats } = useData();
+  const { t } = useLang();
 
   // Produits les plus désirés (wishlist)
   const wishlistTop = Object.entries(wishlistStats)
@@ -63,10 +64,10 @@ export default function AdminDashboard() {
   const maxSold = Math.max(...topProducts.map((t) => t.qty), 1);
 
   const kpis = [
-    { icon: Banknote, label: "Chiffre d'affaires", value: formatDA(revenue), chip: 'bg-blush-soft text-[#8E4254]' },
-    { icon: Hourglass, label: 'Commandes en attente', value: String(pending), chip: 'bg-amber-100 text-amber-700' },
-    { icon: TrendingUp, label: 'Panier moyen', value: formatDA(avgBasket), chip: 'bg-violetp-soft text-violetp-dark' },
-    { icon: AlertTriangle, label: 'Alertes stock', value: String(lowStock.length), chip: 'bg-red-100 text-navred' },
+    { icon: Banknote, label: t('adminDashboard.chiffreAffaires'), value: formatDA(revenue), chip: 'bg-blush-soft text-[#8E4254]' },
+    { icon: Hourglass, label: t('adminDashboard.commandesEnAttente'), value: String(pending), chip: 'bg-amber-100 text-amber-700' },
+    { icon: TrendingUp, label: t('adminDashboard.panierMoyen'), value: formatDA(avgBasket), chip: 'bg-violetp-soft text-violetp-dark' },
+    { icon: AlertTriangle, label: t('adminDashboard.alertesStock'), value: String(lowStock.length), chip: 'bg-red-100 text-navred' },
   ];
 
   return (
@@ -74,14 +75,12 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-          Console Oryam
+          {t('adminDashboard.console')}
         </p>
         <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-          Bonjour, {session?.name.split(' ')[0]}
+          {t('adminDashboard.bonjour')}, {session?.name.split(' ')[0]}
         </h1>
-        <p className="mt-1.5 text-[13.5px] text-neutral-500">
-          Voici l’activité de la boutique en temps réel.
-        </p>
+        <p className="mt-1.5 text-[13.5px] text-neutral-500">{t('adminDashboard.activite')}</p>
       </div>
 
       {/* KPIs */}
@@ -107,10 +106,8 @@ export default function AdminDashboard() {
         <div className="rounded-[25px] border border-black/[0.06] bg-white p-6 shadow-[0_2px_18px_rgba(12,12,14,0.05)]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-serif text-xl font-semibold">Ventes — 7 derniers jours</h2>
-              <p className="mt-0.5 text-[12px] text-neutral-400">
-                Montant encaissé à la livraison par jour
-              </p>
+              <h2 className="font-serif text-xl font-semibold">{t('adminDashboard.ventes7j')}</h2>
+              <p className="mt-0.5 text-[12px] text-neutral-400">{t('adminDashboard.montantParJour')}</p>
             </div>
             <span className="rounded-full bg-stock-soft px-3 py-1 text-[11px] font-bold text-stockgreen">
               +{formatDA(days.reduce((s, d) => s + d.amount, 0))}
@@ -138,24 +135,24 @@ export default function AdminDashboard() {
         {/* Top products + stock alerts */}
         <div className="flex flex-col gap-4">
           <div className="rounded-[25px] border border-black/[0.06] bg-white p-6 shadow-[0_2px_18px_rgba(12,12,14,0.05)]">
-            <h2 className="font-serif text-xl font-semibold">Produits les plus vendus</h2>
+            <h2 className="font-serif text-xl font-semibold">{t('adminDashboard.produitsPlusVendus')}</h2>
             <div className="mt-4 space-y-3.5">
-              {topProducts.map((t) => (
-                <div key={t.name}>
+              {topProducts.map((tp) => (
+                <div key={tp.name}>
                   <div className="flex items-center justify-between text-[12px]">
-                    <span className="truncate font-semibold">{t.name}</span>
-                    <span className="ml-2 shrink-0 font-bold text-blush">{t.qty}</span>
+                    <span className="truncate font-semibold">{tp.name}</span>
+                    <span className="ml-2 shrink-0 font-bold text-blush">{tp.qty}</span>
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-cream">
                     <div
                       className="h-full rounded-full bg-violetp"
-                      style={{ width: `${Math.round((t.qty / maxSold) * 100)}%` }}
+                      style={{ width: `${Math.round((tp.qty / maxSold) * 100)}%` }}
                     />
                   </div>
                 </div>
               ))}
               {topProducts.length === 0 && (
-                <p className="text-[12.5px] text-neutral-400">Aucune vente pour le moment.</p>
+                <p className="text-[12.5px] text-neutral-400">{t('adminDashboard.aucuneVente')}</p>
               )}
             </div>
           </div>
@@ -165,7 +162,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
                 <Heart size={17} className="text-blush" />
-                Les plus désirés
+                {t('adminDashboard.plusDesires')}
               </h2>
               <span className="rounded-full bg-blush-soft px-2.5 py-1 text-[10px] font-bold text-[#8E4254]">
                 WISHLIST
@@ -190,19 +187,19 @@ export default function AdminDashboard() {
                 </div>
               ))}
               {wishlistTop.length === 0 && (
-                <p className="text-[12.5px] text-neutral-400">Aucun favori enregistré.</p>
+                <p className="text-[12.5px] text-neutral-400">{t('adminDashboard.aucunFavori')}</p>
               )}
             </div>
           </div>
 
           <div className="flex-1 rounded-[25px] border border-black/[0.06] bg-white p-6 shadow-[0_2px_18px_rgba(12,12,14,0.05)]">
             <div className="flex items-center justify-between">
-              <h2 className="font-serif text-xl font-semibold">Stock faible</h2>
+              <h2 className="font-serif text-xl font-semibold">{t('adminDashboard.stockFaible')}</h2>
               <Link
                 to="/admin/inventaire"
                 className="flex items-center gap-1 text-[11.5px] font-bold text-blush hover:underline"
               >
-                Gérer <ArrowRight size={12} />
+                {t('adminDashboard.gerer')} <ArrowRight size={12} className="rtl:rotate-180" />
               </Link>
             </div>
             <div className="mt-3.5 space-y-2.5">
@@ -211,12 +208,12 @@ export default function AdminDashboard() {
                   <img src={p.images[0]} alt="" className="h-9 w-9 rounded-lg bg-cream object-cover" />
                   <p className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{p.name}</p>
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10.5px] font-bold text-navred">
-                    {p.stock} restants
+                    {p.stock} {t('adminDashboard.restants')}
                   </span>
                 </div>
               ))}
               {lowStock.length === 0 && (
-                <p className="text-[12.5px] text-neutral-400">Tous les stocks sont sains.</p>
+                <p className="text-[12.5px] text-neutral-400">{t('adminDashboard.stocksSains')}</p>
               )}
             </div>
           </div>
@@ -227,12 +224,12 @@ export default function AdminDashboard() {
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         <div className="rounded-[25px] border border-black/[0.06] bg-white p-6 shadow-[0_2px_18px_rgba(12,12,14,0.05)]">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl font-semibold">Dernières commandes</h2>
+            <h2 className="font-serif text-xl font-semibold">{t('adminDashboard.dernieresCommandes')}</h2>
             <Link
               to="/admin/commandes"
               className="flex items-center gap-1 text-[11.5px] font-bold text-blush hover:underline"
             >
-              Tout voir <ArrowRight size={12} />
+              {t('adminDashboard.toutVoir')} <ArrowRight size={12} className="rtl:rotate-180" />
             </Link>
           </div>
           <div className="mt-4 divide-y divide-black/5">
@@ -246,7 +243,7 @@ export default function AdminDashboard() {
                     {o.ref} <span className="font-medium text-neutral-400">· {o.name}</span>
                   </p>
                   <p className="text-[11px] text-neutral-400">
-                    {o.wilayaName} · {o.items.reduce((s, i) => s + i.qty, 0)} article(s)
+                    {o.wilayaName} · {o.items.reduce((s, i) => s + i.qty, 0)} {t('adminDashboard.articles')}
                   </p>
                 </div>
                 <div className="text-right">
@@ -254,7 +251,7 @@ export default function AdminDashboard() {
                   <span
                     className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[9.5px] font-bold ${STATUS_COLORS[o.status]}`}
                   >
-                    {ORDER_STATUS_LABELS[o.status]}
+                    {t(`orderStatus.${o.status}` as const)}
                   </span>
                 </div>
               </div>
@@ -264,12 +261,12 @@ export default function AdminDashboard() {
 
         <div className="rounded-[25px] border border-black/[0.06] bg-white p-6 shadow-[0_2px_18px_rgba(12,12,14,0.05)]">
           <div className="flex items-center justify-between">
-            <h2 className="font-serif text-xl font-semibold">Mouvements de stock récents</h2>
+            <h2 className="font-serif text-xl font-semibold">{t('adminDashboard.mouvementsRecents')}</h2>
             <Link
               to="/admin/inventaire"
               className="flex items-center gap-1 text-[11.5px] font-bold text-blush hover:underline"
             >
-              Grand livre <ArrowRight size={12} />
+              {t('adminDashboard.grandLivre')} <ArrowRight size={12} className="rtl:rotate-180" />
             </Link>
           </div>
           <div className="mt-4 divide-y divide-black/5">
