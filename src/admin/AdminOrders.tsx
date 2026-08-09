@@ -21,7 +21,8 @@ import {
 import ManualOrderModal from './ManualOrderModal';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
-import { ORDER_FLOW, ORDER_STATUS_LABELS, type Order, type OrderStatus } from '../lib/types';
+import { useLang } from '../context/LanguageContext';
+import { ORDER_FLOW, type Order, type OrderStatus } from '../lib/types';
 import { formatDA } from '../lib/format';
 import { downloadCsv } from '../lib/exportCsv';
 
@@ -80,6 +81,7 @@ function printLabel(o: Order) {
 function OrderActions({ order, compact = false }: { order: Order; compact?: boolean }) {
   const { setOrderStatus, shipOrder } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [shipping, setShipping] = useState(false);
   const flowIndex = ORDER_FLOW.indexOf(order.status);
   const next = flowIndex >= 0 && flowIndex < ORDER_FLOW.length - 1 ? ORDER_FLOW[flowIndex + 1] : null;
@@ -88,24 +90,24 @@ function OrderActions({ order, compact = false }: { order: Order; compact?: bool
     setShipping(true);
     await shipOrder(order);
     setShipping(false);
-    showToast('Colis synchronisé avec Yalidine — expédié');
+    showToast(t('adminOrders.colisSynchronise'));
   };
 
   const btn = 'flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-500 transition hover:border-ink hover:text-ink active:scale-90';
 
   return (
     <div className={`flex items-center gap-1.5 ${compact ? '' : 'justify-end'}`}>
-      <a href={`tel:${order.phone}`} title="Appeler la cliente" className={btn}>
+      <a href={`tel:${order.phone}`} title={t('adminOrders.appeler')} className={btn}>
         <Phone size={14} />
       </a>
-      <button onClick={() => printLabel(order)} title="Imprimer l’étiquette" className={btn}>
+      <button onClick={() => printLabel(order)} title={t('adminOrders.imprimerEtiquette')} className={btn}>
         <Printer size={14} />
       </button>
       {(order.status === 'confirmee' || order.status === 'en_attente') && (
         <button
           onClick={ship}
           disabled={shipping}
-          title="Expédier via Yalidine"
+          title={t('adminOrders.expedierYalidine')}
           className="flex h-8 items-center gap-1.5 rounded-lg bg-violetp px-2.5 text-[11px] font-bold text-white transition hover:bg-violetp-dark active:scale-95 disabled:opacity-60"
         >
           {shipping ? <Loader2 size={13} className="animate-spin" /> : <Truck size={13} />}
@@ -116,9 +118,9 @@ function OrderActions({ order, compact = false }: { order: Order; compact?: bool
         <button
           onClick={() => {
             setOrderStatus(order.id, next);
-            showToast(`Commande ${order.ref} → ${ORDER_STATUS_LABELS[next]}`);
+            showToast(`${order.ref} → ${t(`orderStatus.${next}` as const)}`);
           }}
-          title={`Passer à « ${ORDER_STATUS_LABELS[next]} »`}
+          title={t(`orderStatus.${next}` as const)}
           className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-white transition hover:bg-black active:scale-90"
         >
           <Check size={14} />
@@ -128,9 +130,9 @@ function OrderActions({ order, compact = false }: { order: Order; compact?: bool
         <button
           onClick={() => {
             setOrderStatus(order.id, 'annulee');
-            showToast(`Commande ${order.ref} annulée`);
+            showToast(`${order.ref} ${t('adminOrders.commandeAnnulee')}`);
           }}
-          title="Annuler"
+          title={t('adminOrders.annuler')}
           className={`${btn} hover:!border-navred hover:!text-navred`}
         >
           <Ban size={14} />
@@ -143,6 +145,7 @@ function OrderActions({ order, compact = false }: { order: Order; compact?: bool
 export default function AdminOrders() {
   const { orders, setOrderStatus, getProduct } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [view, setView] = useState<'table' | 'kanban'>('table');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'tous'>('tous');
@@ -178,7 +181,7 @@ export default function AdminOrders() {
     const id = e.dataTransfer.getData('text/plain');
     if (id) {
       setOrderStatus(id, status);
-      showToast(`Statut mis à jour → ${ORDER_STATUS_LABELS[status]}`);
+      showToast(`${t('adminOrders.statutMisAJour')} → ${t(`orderStatus.${status}` as const)}`);
     }
   };
 
@@ -186,7 +189,7 @@ export default function AdminOrders() {
 
   const exportCsv = () => {
     if (filtered.length === 0) {
-      showToast('Aucune commande à exporter');
+      showToast(t('adminOrders.aucuneAExporter'));
       return;
     }
     downloadCsv(
@@ -194,12 +197,12 @@ export default function AdminOrders() {
       filtered.map((o) => ({
         Référence: o.ref,
         Date: new Date(o.createdAt).toLocaleString('fr-FR'),
-        Statut: ORDER_STATUS_LABELS[o.status],
+        Statut: t(`orderStatus.${o.status}` as const),
         Client: o.name,
         Téléphone: o.phone,
         Wilaya: o.wilayaName,
         Commune: o.commune,
-        Livraison: o.delivery === 'domicile' ? 'À domicile' : 'Stop desk',
+        Livraison: o.delivery === 'domicile' ? t('adminOrders.aDomicile') : t('adminOrders.pointRelais'),
         Articles: o.items.map((i) => `${i.qty}x ${i.name}`).join(' | '),
         'Sous-total': o.subtotal,
         Livraison_DA: o.shipping,
@@ -209,7 +212,7 @@ export default function AdminOrders() {
         Suivi: o.tracking ?? '',
       })),
     );
-    showToast(`${filtered.length} commande(s) exportée(s)`);
+    showToast(`${filtered.length} ${t('adminOrders.exportee')}`);
   };
 
   return (
@@ -218,13 +221,13 @@ export default function AdminOrders() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-            Centre de traitement
+            {t('adminOrders.centreTraitement')}
           </p>
           <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            Commandes
+            {t('adminOrders.titre')}
           </h1>
           <p className="mt-1 text-[13px] text-neutral-500">
-            {counts.en_attente} en attente · {counts.expediee} en cours de livraison
+            {counts.en_attente} {t('adminOrders.resume')} · {counts.expediee} {t('adminOrders.resumeEnCours')}
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -233,20 +236,20 @@ export default function AdminOrders() {
             className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-3 text-[13px] font-bold text-ink transition hover:bg-cream"
           >
             <Download size={15} />
-            Exporter CSV
+            {t('adminOrders.exporterCsv')}
           </button>
           <button
             onClick={() => setCreateOpen(true)}
             className="flex items-center gap-2 rounded-full bg-blush px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-blush/30 transition hover:bg-blush-dark active:scale-[0.98]"
           >
             <Plus size={15} />
-            Créer une commande
+            {t('adminOrders.creerCommande')}
           </button>
           <div className="flex rounded-full border border-neutral-200 bg-white p-1">
             {(
               [
-                { v: 'table', icon: Table2, label: 'Table' },
-                { v: 'kanban', icon: LayoutGrid, label: 'Kanban' },
+                { v: 'table', icon: Table2, label: t('adminOrders.table') },
+                { v: 'kanban', icon: LayoutGrid, label: t('adminOrders.kanban') },
             ] as const
           ).map(({ v, icon: Icon, label }) => (
             <button
@@ -271,7 +274,7 @@ export default function AdminOrders() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher : réf, cliente, téléphone, commune…"
+            placeholder={t('adminOrders.rechercherPlaceholder')}
             className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-[13px] outline-none transition focus:border-blush focus:ring-2 focus:ring-blush/20"
           />
         </div>
@@ -286,7 +289,7 @@ export default function AdminOrders() {
                   : 'border border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300'
               }`}
             >
-              {f === 'tous' ? 'Toutes' : ORDER_STATUS_LABELS[f]} · {counts[f]}
+              {f === 'tous' ? t('adminOrders.toutes') : t(`orderStatus.${f}` as const)} · {counts[f]}
             </button>
           ))}
         </div>
@@ -328,19 +331,19 @@ export default function AdminOrders() {
                     </p>
                     <p className="mt-0.5 flex items-center gap-1 text-[10.5px] text-neutral-400">
                       {o.delivery === 'domicile' ? <Home size={11} /> : <Store size={11} />}
-                      {o.delivery === 'domicile' ? 'À domicile' : 'Point relais'}
+                      {o.delivery === 'domicile' ? t('adminOrders.aDomicile') : t('adminOrders.pointRelais')}
                     </p>
                   </div>
                   <div className="min-w-[110px]">
                     <p className="text-[13.5px] font-extrabold">{formatDA(o.total)}</p>
                     <p className="text-[10.5px] text-neutral-400">
-                      dont {formatDA(o.shipping)} livraison
+                      {t('adminOrders.dontLivraison')} {formatDA(o.shipping)} {t('adminOrders.livraisonMot')}
                     </p>
                   </div>
                   <span
                     className={`rounded-full px-3 py-1 text-[10.5px] font-bold ${STATUS_COLORS[o.status]}`}
                   >
-                    {ORDER_STATUS_LABELS[o.status]}
+                    {t(`orderStatus.${o.status}` as const)}
                   </span>
                   <OrderActions order={o} />
                 </div>
@@ -354,7 +357,7 @@ export default function AdminOrders() {
                     <div className="grid gap-5 md:grid-cols-2">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                          Articles commandés
+                          {t('adminOrders.articlesCommandes')}
                         </p>
                         <div className="mt-2 space-y-2">
                           {o.items.map((i) => (
@@ -375,35 +378,35 @@ export default function AdminOrders() {
                         </div>
                         <div className="mt-3 space-y-1 border-t border-black/8 pt-3 text-[12px] text-neutral-500">
                           <p className="flex justify-between">
-                            Sous-total <span>{formatDA(o.subtotal)}</span>
+                            {t('adminOrders.sousTotal')} <span>{formatDA(o.subtotal)}</span>
                           </p>
                           {o.discount > 0 && (
                             <p className="flex justify-between text-stockgreen">
-                              Réduction{o.promoCode ? ` (${o.promoCode})` : ''}
+                              {t('adminOrders.reduction')}{o.promoCode ? ` (${o.promoCode})` : ''}
                               <span>-{formatDA(o.discount)}</span>
                             </p>
                           )}
                           <p className="flex justify-between">
-                            Livraison <span>{formatDA(o.shipping)}</span>
+                            {t('adminOrders.livraison')} <span>{formatDA(o.shipping)}</span>
                           </p>
                         </div>
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                          Livraison
+                          {t('adminOrders.livraison')}
                         </p>
                         <p className="mt-2 text-[12.5px] leading-relaxed text-neutral-600">
                           {o.address ? `${o.address}, ` : ''}
-                          {o.commune}, {o.wilayaName} — wilaya {String(o.wilayaCode).padStart(2, '0')}
+                          {o.commune}, {o.wilayaName} — {String(o.wilayaCode).padStart(2, '0')}
                         </p>
                         {o.promoCode && (
                           <p className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-stockgreen">
-                            <TicketPercent size={13} /> Code {o.promoCode} utilisé
+                            <TicketPercent size={13} /> {t('adminOrders.codeUtilise')} {o.promoCode} {t('adminOrders.codeUtiliseSuffix')}
                           </p>
                         )}
                         {o.tracking && (
                           <p className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-violetp-dark">
-                            <Truck size={13} /> Tracking Yalidine : {o.tracking}
+                            <Truck size={13} /> {t('adminOrders.trackingYalidine')} : {o.tracking}
                           </p>
                         )}
                       </div>
@@ -415,7 +418,7 @@ export default function AdminOrders() {
           })}
           {filtered.length === 0 && (
             <div className="rounded-[20px] border border-dashed border-neutral-200 bg-white p-10 text-center text-[13px] text-neutral-400">
-              Aucune commande ne correspond à votre recherche.
+              {t('adminOrders.aucuneCommande')}
             </div>
           )}
         </div>
@@ -437,7 +440,7 @@ export default function AdminOrders() {
                   <span
                     className={`rounded-full px-3 py-1 text-[10.5px] font-bold ${STATUS_COLORS[status]}`}
                   >
-                    {ORDER_STATUS_LABELS[status]}
+                    {t(`orderStatus.${status}` as const)}
                   </span>
                   <span className="text-[11px] font-bold text-neutral-400">{cols.length}</span>
                 </div>
@@ -470,7 +473,7 @@ export default function AdminOrders() {
                   ))}
                   {cols.length === 0 && (
                     <div className="rounded-2xl border-2 border-dashed border-neutral-200 py-6 text-center text-[11px] font-medium text-neutral-300">
-                      Glisser une commande ici
+                      {t('adminOrders.glisserIci')}
                     </div>
                   )}
                 </div>
