@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
 import { marginOf, type CatalogProduct, type Variant } from '../lib/types';
 import { formatDA, promoPercent } from '../lib/format';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -37,6 +38,12 @@ interface FormState {
   description: string;
   ingredients: string;
   usage: string;
+  nameAr: string;
+  categoryAr: string;
+  shortDescAr: string;
+  descriptionAr: string;
+  ingredientsAr: string;
+  usageAr: string;
   images: string[];
   price: number;
   oldPrice: number;
@@ -58,6 +65,12 @@ const blankForm: FormState = {
   description: '',
   ingredients: '',
   usage: '',
+  nameAr: '',
+  categoryAr: '',
+  shortDescAr: '',
+  descriptionAr: '',
+  ingredientsAr: '',
+  usageAr: '',
   images: [],
   price: 0,
   oldPrice: 0,
@@ -70,8 +83,6 @@ const blankForm: FormState = {
   isActive: true,
 };
 
-const FORM_STEPS = ['Infos générales', 'Images', 'Prix & Variantes', 'Cross-selling'];
-
 function ProductFormModal({
   initial,
   onClose,
@@ -81,10 +92,14 @@ function ProductFormModal({
 }) {
   const { catalog, links, upsertProduct } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [step, setStep] = useState(1);
+  const [contentLang, setContentLang] = useState<'fr' | 'ar'>('fr');
   const [dragOver, setDragOver] = useState(false);
   const [linkSearch, setLinkSearch] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const FORM_STEPS = [t('adminProducts.etape1'), t('adminProducts.etape2'), t('adminProducts.etape3'), t('adminProducts.etape4')];
 
   const [form, setForm] = useState<FormState>(() =>
     initial
@@ -97,6 +112,12 @@ function ProductFormModal({
           description: initial.description,
           ingredients: initial.ingredients,
           usage: initial.usage,
+          nameAr: initial.nameAr ?? '',
+          categoryAr: initial.categoryAr ?? '',
+          shortDescAr: initial.shortDescAr ?? '',
+          descriptionAr: initial.descriptionAr ?? '',
+          ingredientsAr: initial.ingredientsAr ?? '',
+          usageAr: initial.usageAr ?? '',
           images: [...initial.images],
           price: initial.price,
           oldPrice: initial.oldPrice ?? 0,
@@ -118,7 +139,6 @@ function ProductFormModal({
     const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (!list.length) return;
 
-    // Production : upload vers Supabase Storage (bucket public `product-images`)
     if (isSupabaseConfigured) {
       showToast('Upload vers Supabase Storage\u2026');
       void uploadProductImages(list).then((urls) => {
@@ -132,7 +152,6 @@ function ProductFormModal({
       return;
     }
 
-    // Mode démo : fallback dataURL local
     void Promise.all(
       list.map(
         (file) =>
@@ -188,6 +207,12 @@ function ProductFormModal({
       description: form.description.trim() || form.shortDesc.trim(),
       ingredients: form.ingredients.trim() || 'Formule déposée Oryam — liste INCI disponible sur demande.',
       usage: form.usage.trim() || 'Appliquer selon les recommandations de la fiche produit.',
+      nameAr: form.nameAr.trim() || undefined,
+      categoryAr: form.categoryAr.trim() || undefined,
+      shortDescAr: form.shortDescAr.trim() || undefined,
+      descriptionAr: form.descriptionAr.trim() || undefined,
+      ingredientsAr: form.ingredientsAr.trim() || undefined,
+      usageAr: form.usageAr.trim() || undefined,
       inStock: form.stock > 0,
       rating: form.rating,
       reviews: form.reviews,
@@ -200,7 +225,7 @@ function ProductFormModal({
       packItems: initial?.packItems,
     };
     upsertProduct(product, form.linkIds);
-    showToast(initial ? 'Produit mis à jour' : 'Produit publié en boutique');
+    showToast(initial ? t('adminProducts.produitMisAJour') : t('adminProducts.produitPublie'));
     onClose();
   };
 
@@ -209,6 +234,9 @@ function ProductFormModal({
       p.id !== form.id &&
       p.name.toLowerCase().includes(linkSearch.trim().toLowerCase()),
   );
+
+  // Champs affichés en étape 1 selon la langue de contenu sélectionnée
+  const f = (fr: keyof FormState, ar: keyof FormState) => (contentLang === 'fr' ? fr : ar);
 
   return (
     <motion.div
@@ -230,11 +258,11 @@ function ProductFormModal({
         <div className="border-b border-neutral-100 px-6 pb-4 pt-6">
           <div className="flex items-center justify-between">
             <h2 className="font-serif text-2xl font-semibold">
-              {initial ? 'Modifier le produit' : 'Nouveau produit'}
+              {initial ? t('adminProducts.modifierProduit') : t('adminProducts.nouveauProduitTitre')}
             </h2>
             <button
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={t('common.fermer')}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-neutral-500 hover:bg-neutral-200"
             >
               <X size={16} />
@@ -270,54 +298,74 @@ function ProductFormModal({
           {/* STEP 1 */}
           {step === 1 && (
             <>
-              <div>
-                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Type de produit
+              <div className="flex items-center justify-between rounded-xl bg-cream p-1">
+                <p className="pl-2.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  {t('adminProducts.langueContenu')}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(
-                    [
-                      { v: 'produit', t: 'Produit', d: 'Soin individuel — tag bleu' },
-                      { v: 'pack', t: 'Pack / Coffret', d: 'Ensemble de soins — tag violet' },
-                    ] as const
-                  ).map((t) => (
+                <div className="flex gap-1">
+                  {(['fr', 'ar'] as const).map((l) => (
                     <button
-                      key={t.v}
-                      onClick={() => set('type', t.v)}
-                      className={`rounded-xl border p-3.5 text-left transition ${
-                        form.type === t.v
-                          ? t.v === 'pack'
-                            ? 'border-violetp bg-violetp-soft ring-1 ring-violetp'
-                            : 'border-tagblue bg-blue-50 ring-1 ring-tagblue'
-                          : 'border-neutral-200 hover:border-neutral-300'
+                      key={l}
+                      onClick={() => setContentLang(l)}
+                      className={`rounded-lg px-3 py-1.5 text-[12px] font-bold transition ${
+                        contentLang === l ? 'bg-ink text-white' : 'text-neutral-500 hover:text-ink'
                       }`}
                     >
-                      <p className="text-[13px] font-bold">{t.t}</p>
-                      <p className="mt-0.5 text-[11px] text-neutral-500">{t.d}</p>
+                      {l === 'fr' ? 'FR' : 'AR'}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Nom du produit *
+                  {t('adminProducts.typeProduit')}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { v: 'produit', t: t('adminProducts.typeProduitLabel'), d: t('adminProducts.typeProduitDesc') },
+                      { v: 'pack', t: t('adminProducts.typePackLabel'), d: t('adminProducts.typePackDesc') },
+                    ] as const
+                  ).map((ty) => (
+                    <button
+                      key={ty.v}
+                      onClick={() => set('type', ty.v)}
+                      className={`rounded-xl border p-3.5 text-left transition ${
+                        form.type === ty.v
+                          ? ty.v === 'pack'
+                            ? 'border-violetp bg-violetp-soft ring-1 ring-violetp'
+                            : 'border-tagblue bg-blue-50 ring-1 ring-tagblue'
+                          : 'border-neutral-200 hover:border-neutral-300'
+                      }`}
+                    >
+                      <p className="text-[13px] font-bold">{ty.t}</p>
+                      <p className="mt-0.5 text-[11px] text-neutral-500">{ty.d}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                  {t('adminProducts.nomProduit')} {contentLang === 'ar' && '(AR)'}
                 </p>
                 <input
-                  value={form.name}
-                  onChange={(e) => set('name', e.target.value)}
-                  placeholder="Ex : Sérum Éclat — Vitamine C"
+                  dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                  value={form[f('name', 'nameAr')] as string}
+                  onChange={(e) => set(f('name', 'nameAr'), e.target.value)}
+                  placeholder={contentLang === 'fr' ? t('adminProducts.nomPlaceholder') : ''}
                   className={inputCls}
                 />
               </div>
               <div>
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Catégorie
+                  {t('adminProducts.categorie')} {contentLang === 'ar' && '(AR)'}
                 </p>
                 <input
-                  value={form.category}
-                  onChange={(e) => set('category', e.target.value)}
-                  placeholder="Ex : Sérums, Crèmes, Huiles…"
-                  list="categories-existantes"
+                  dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                  value={form[f('category', 'categoryAr')] as string}
+                  onChange={(e) => set(f('category', 'categoryAr'), e.target.value)}
+                  placeholder={contentLang === 'fr' ? t('adminProducts.categoriePlaceholder') : ''}
+                  list={contentLang === 'fr' ? 'categories-existantes' : undefined}
                   className={inputCls}
                 />
                 <datalist id="categories-existantes">
@@ -328,49 +376,53 @@ function ProductFormModal({
               </div>
               <div>
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Description courte (carte)
+                  {t('adminProducts.descCourte')} {contentLang === 'ar' && '(AR)'}
                 </p>
                 <input
-                  value={form.shortDesc}
-                  onChange={(e) => set('shortDesc', e.target.value)}
-                  placeholder="Une phrase accrocheuse pour la fiche produit"
+                  dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                  value={form[f('shortDesc', 'shortDescAr')] as string}
+                  onChange={(e) => set(f('shortDesc', 'shortDescAr'), e.target.value)}
+                  placeholder={contentLang === 'fr' ? t('adminProducts.descCourtePlaceholder') : ''}
                   className={inputCls}
                 />
               </div>
               <div>
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Description complète
+                  {t('adminProducts.descComplete')} {contentLang === 'ar' && '(AR)'}
                 </p>
                 <textarea
-                  value={form.description}
-                  onChange={(e) => set('description', e.target.value)}
+                  dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                  value={form[f('description', 'descriptionAr')] as string}
+                  onChange={(e) => set(f('description', 'descriptionAr'), e.target.value)}
                   rows={3}
-                  placeholder="Bénéfices, texture, résultats…"
+                  placeholder={contentLang === 'fr' ? t('adminProducts.descCompletePlaceholder') : ''}
                   className={`${inputCls} resize-none`}
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Ingrédients
+                    {t('adminProducts.ingredients')} {contentLang === 'ar' && '(AR)'}
                   </p>
                   <textarea
-                    value={form.ingredients}
-                    onChange={(e) => set('ingredients', e.target.value)}
+                    dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                    value={form[f('ingredients', 'ingredientsAr')] as string}
+                    onChange={(e) => set(f('ingredients', 'ingredientsAr'), e.target.value)}
                     rows={3}
-                    placeholder="Liste INCI…"
+                    placeholder={contentLang === 'fr' ? t('adminProducts.ingredientsPlaceholder') : ''}
                     className={`${inputCls} resize-none`}
                   />
                 </div>
                 <div>
                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Conseils d’utilisation
+                    {t('adminProducts.usage')} {contentLang === 'ar' && '(AR)'}
                   </p>
                   <textarea
-                    value={form.usage}
-                    onChange={(e) => set('usage', e.target.value)}
+                    dir={contentLang === 'ar' ? 'rtl' : 'ltr'}
+                    value={form[f('usage', 'usageAr')] as string}
+                    onChange={(e) => set(f('usage', 'usageAr'), e.target.value)}
                     rows={3}
-                    placeholder="Mode d’emploi…"
+                    placeholder={contentLang === 'fr' ? t('adminProducts.usagePlaceholder') : ''}
                     className={`${inputCls} resize-none`}
                   />
                 </div>
@@ -400,12 +452,8 @@ function ProductFormModal({
                 <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blush-soft text-blush">
                   <Upload size={22} />
                 </span>
-                <p className="mt-3 text-[13.5px] font-bold">
-                  Glissez vos images haute résolution ici
-                </p>
-                <p className="mt-1 text-[12px] text-neutral-400">
-                  ou cliquez pour parcourir — PNG, JPG jusqu’à 10 Mo
-                </p>
+                <p className="mt-3 text-[13.5px] font-bold">{t('adminProducts.glisserImages')}</p>
+                <p className="mt-1 text-[12px] text-neutral-400">{t('adminProducts.ouCliquez')}</p>
                 <input
                   ref={fileRef}
                   type="file"
@@ -431,14 +479,14 @@ function ProductFormModal({
                       <img src={img} alt="" className="aspect-square w-full bg-cream object-cover" />
                       {i === 0 && (
                         <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-blush px-2 py-0.5 text-[9px] font-bold text-white">
-                          <Star size={9} className="fill-current" /> Cover
+                          <Star size={9} className="fill-current" /> {t('adminProducts.cover')}
                         </span>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/50 opacity-0 transition group-hover:opacity-100">
                         {i !== 0 && (
                           <button
                             onClick={() => makeCover(i)}
-                            title="Définir comme cover"
+                            title={t('adminProducts.definirCover')}
                             className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-ink"
                           >
                             <Star size={13} />
@@ -446,7 +494,7 @@ function ProductFormModal({
                         )}
                         <button
                           onClick={() => removeImage(i)}
-                          title="Supprimer"
+                          title={t('adminProducts.supprimer')}
                           className="flex h-7 w-7 items-center justify-center rounded-lg bg-navred text-white"
                         >
                           <Trash2 size={13} />
@@ -458,7 +506,7 @@ function ProductFormModal({
               )}
               {form.images.length === 0 && (
                 <p className="flex items-center gap-2 text-[12px] font-medium text-neutral-400">
-                  <ImageIcon size={14} /> Au moins une image est requise pour publier.
+                  <ImageIcon size={14} /> {t('adminProducts.imageRequise')}
                 </p>
               )}
             </>
@@ -470,7 +518,7 @@ function ProductFormModal({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Prix de vente (DA) *
+                    {t('adminProducts.prixVente')} *
                   </p>
                   <input
                     type="number"
@@ -483,7 +531,7 @@ function ProductFormModal({
                 </div>
                 <div>
                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Ancien prix (promo)
+                    {t('adminProducts.ancienPrix')}
                   </p>
                   <input
                     type="number"
@@ -496,7 +544,7 @@ function ProductFormModal({
                 </div>
                 <div>
                   <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Prix d’achat (coût)
+                    {t('adminProducts.prixAchat')}
                   </p>
                   <input
                     type="number"
@@ -512,7 +560,7 @@ function ProductFormModal({
               <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-cream p-4">
                 <div>
                   <p className="text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                    Marge
+                    {t('adminProducts.marge2')}
                   </p>
                   <p
                     className={`text-xl font-extrabold ${margin < 25 ? 'text-navred' : 'text-stockgreen'}`}
@@ -523,7 +571,7 @@ function ProductFormModal({
                 <div className="h-8 w-px bg-black/10" />
                 <div>
                   <p className="text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                    Bénéfice / unité
+                    {t('adminProducts.beneficeUnite')}
                   </p>
                   <p className="text-xl font-extrabold">
                     {form.price > 0 ? formatDA(Math.max(0, form.price - form.costPrice)) : '—'}
@@ -534,7 +582,7 @@ function ProductFormModal({
                     <div className="h-8 w-px bg-black/10" />
                     <div>
                       <p className="text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                        Remise affichée
+                        {t('adminProducts.remiseAffichee')}
                       </p>
                       <p className="text-xl font-extrabold text-navred">
                         -{promoPercent(form.price, form.oldPrice)}%
@@ -546,7 +594,7 @@ function ProductFormModal({
 
               <div>
                 <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                  Stock initial
+                  {t('adminProducts.stockInitial')}
                 </p>
                 <input
                   type="number"
@@ -561,7 +609,7 @@ function ProductFormModal({
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                    Variantes (taille, format…)
+                    {t('adminProducts.variantes')}
                   </p>
                   <button
                     onClick={() =>
@@ -572,7 +620,7 @@ function ProductFormModal({
                     }
                     className="flex items-center gap-1 text-[11.5px] font-bold text-blush hover:underline"
                   >
-                    <Plus size={13} /> Ajouter une variante
+                    <Plus size={13} /> {t('adminProducts.ajouterVariante')}
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -588,7 +636,7 @@ function ProductFormModal({
                             ),
                           )
                         }
-                        placeholder="Ex : 100 ml"
+                        placeholder={t('adminProducts.variantePlaceholder')}
                         className={`${inputCls} flex-1`}
                       />
                       <input
@@ -628,7 +676,7 @@ function ProductFormModal({
                             form.variants.filter((_, xi) => xi !== i),
                           )
                         }
-                        aria-label="Supprimer la variante"
+                        aria-label={t('adminProducts.supprimer')}
                         className="text-neutral-300 transition hover:text-navred"
                       >
                         <Trash2 size={15} />
@@ -637,7 +685,7 @@ function ProductFormModal({
                   ))}
                   {form.variants.length === 0 && (
                     <p className="rounded-xl border border-dashed border-neutral-200 py-3 text-center text-[12px] text-neutral-400">
-                      Aucune variante — le produit sera vendu en format unique.
+                      {t('adminProducts.aucuneVariante')}
                     </p>
                   )}
                 </div>
@@ -651,11 +699,10 @@ function ProductFormModal({
               <div className="rounded-2xl bg-violetp-soft/60 p-4">
                 <p className="flex items-center gap-2 text-[12.5px] font-bold text-violetp-dark">
                   <Link2 size={15} />
-                  Souvent achetés ensemble — {form.linkIds.length} produit(s) lié(s)
+                  {t('adminProducts.souventAchetes')} {form.linkIds.length} {t('adminProducts.produitsLies')}
                 </p>
                 <p className="mt-1 text-[11.5px] leading-relaxed text-violetp-dark/70">
-                  Ces produits s’afficheront dans la section « Vous aimerez aussi » de la
-                  fiche boutique.
+                  {t('adminProducts.afficherDans')}
                 </p>
               </div>
               <div className="relative">
@@ -663,7 +710,7 @@ function ProductFormModal({
                 <input
                   value={linkSearch}
                   onChange={(e) => setLinkSearch(e.target.value)}
-                  placeholder="Rechercher un produit à lier…"
+                  placeholder={t('adminProducts.rechercherLier')}
                   className={`${inputCls} pl-10`}
                 />
               </div>
@@ -711,7 +758,7 @@ function ProductFormModal({
               step === 1 ? 'invisible' : 'text-neutral-500 hover:text-ink'
             }`}
           >
-            <ChevronLeft size={15} /> Précédent
+            <ChevronLeft size={15} /> {t('adminProducts.precedent')}
           </button>
           {step < 4 ? (
             <button
@@ -719,10 +766,10 @@ function ProductFormModal({
                 if (!canNext()) {
                   showToast(
                     step === 1
-                      ? 'Le nom du produit est requis (3 caractères min.)'
+                      ? t('adminProducts.errNom3')
                       : step === 2
-                        ? 'Ajoutez au moins une image'
-                        : 'Le prix de vente doit être supérieur à 0',
+                        ? t('adminProducts.errImage')
+                        : t('adminProducts.errPrix'),
                   );
                   return;
                 }
@@ -730,7 +777,7 @@ function ProductFormModal({
               }}
               className="flex items-center gap-1.5 rounded-full bg-ink px-6 py-2.5 text-[12.5px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
             >
-              Suivant <ChevronRight size={15} />
+              {t('adminProducts.suivant')} <ChevronRight size={15} />
             </button>
           ) : (
             <button
@@ -738,7 +785,7 @@ function ProductFormModal({
               className="flex items-center gap-2 rounded-full bg-blush px-6 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-blush/30 transition hover:bg-blush-dark active:scale-[0.98]"
             >
               <Check size={15} />
-              {initial ? 'Enregistrer les modifications' : 'Publier le produit'}
+              {initial ? t('adminProducts.enregistrerModifs') : t('adminProducts.publierProduit')}
             </button>
           )}
         </div>
@@ -751,6 +798,7 @@ function ProductFormModal({
 export default function AdminProducts() {
   const { catalog, links, deleteProduct, setProductActive } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<CatalogProduct | null>(null);
   const [creating, setCreating] = useState(false);
@@ -762,27 +810,24 @@ export default function AdminProducts() {
     [catalog, query],
   );
 
-  // Lien de campagne (page /lp/:id sans navigation, pensée pour les publicités
-  // Facebook/Instagram) — copié dans le presse-papiers pour coller direct
-  // dans le gestionnaire de pub.
   const copyLandingLink = (p: CatalogProduct) => {
     const url = `${window.location.origin}/lp/${p.id}`;
     void navigator.clipboard
       .writeText(url)
-      .then(() => showToast('Lien de campagne copié \u2014 prêt à coller dans vos publicités'))
-      .catch(() => showToast('Impossible de copier le lien \u2014 copiez-le manuellement : ' + url));
+      .then(() => showToast(t('adminProducts.lienCopie')))
+      .catch(() => showToast(`${t('adminProducts.lienEchoue')} ${url}`));
   };
 
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">Catalogue</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">{t('adminProducts.catalogue')}</p>
           <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            Produits
+            {t('adminProducts.titre')}
           </h1>
           <p className="mt-1 text-[13px] text-neutral-500">
-            {catalog.filter((p) => p.isActive).length} actifs · {catalog.length} au total
+            {catalog.filter((p) => p.isActive).length} {t('adminProducts.actifs')} · {catalog.length} {t('adminProducts.auTotal')}
           </p>
         </div>
         <button
@@ -790,7 +835,7 @@ export default function AdminProducts() {
           className="flex items-center gap-2 rounded-full bg-blush px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-blush/30 transition hover:bg-blush-dark active:scale-[0.98]"
         >
           <Plus size={16} />
-          Nouveau produit
+          {t('adminProducts.nouveauProduit')}
         </button>
       </div>
 
@@ -799,7 +844,7 @@ export default function AdminProducts() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un produit…"
+          placeholder={t('adminProducts.rechercherPlaceholder')}
           className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-[13px] outline-none transition focus:border-blush focus:ring-2 focus:ring-blush/20"
         />
       </div>
@@ -809,13 +854,13 @@ export default function AdminProducts() {
           <table className="w-full min-w-[860px] text-left">
             <thead>
               <tr className="border-b border-black/5 bg-cream/60 text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                <th className="px-5 py-3.5">Produit</th>
-                <th className="px-4 py-3.5">Prix</th>
-                <th className="px-4 py-3.5">Coût / Marge</th>
-                <th className="px-4 py-3.5">Stock</th>
-                <th className="px-4 py-3.5">Liens</th>
-                <th className="px-4 py-3.5">Visible</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
+                <th className="px-5 py-3.5">{t('adminProducts.colProduit')}</th>
+                <th className="px-4 py-3.5">{t('adminProducts.colPrix')}</th>
+                <th className="px-4 py-3.5">{t('adminProducts.colCoutMarge')}</th>
+                <th className="px-4 py-3.5">{t('adminProducts.colStock')}</th>
+                <th className="px-4 py-3.5">{t('adminProducts.colLiens')}</th>
+                <th className="px-4 py-3.5">{t('adminProducts.colVisible')}</th>
+                <th className="px-4 py-3.5 text-right">{t('adminProducts.colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
@@ -837,8 +882,13 @@ export default function AdminProducts() {
                               p.type === 'pack' ? 'bg-violetp' : 'bg-tagblue'
                             }`}
                           >
-                            {p.type === 'pack' ? 'Pack' : 'Produit'}
+                            {p.type === 'pack' ? t('product.pack') : t('product.produit')}
                           </span>
+                          {p.nameAr && (
+                            <span className="ml-1 mt-0.5 inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-[9.5px] font-bold text-neutral-500">
+                              AR ✓
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -857,7 +907,7 @@ export default function AdminProducts() {
                           marginOf(p.price, p.costPrice) < 25 ? 'text-navred' : 'text-stockgreen'
                         }`}
                       >
-                        {marginOf(p.price, p.costPrice)}% marge
+                        {marginOf(p.price, p.costPrice)}% {t('adminProducts.marge')}
                       </p>
                     </td>
                     <td className="px-4 py-3">
@@ -880,13 +930,9 @@ export default function AdminProducts() {
                       <button
                         onClick={() => {
                           setProductActive(p.id, !p.isActive);
-                          showToast(
-                            p.isActive
-                              ? `${p.name} masqué de la boutique`
-                              : `${p.name} visible en boutique`,
-                          );
+                          showToast(`${p.name} ${p.isActive ? t('adminProducts.masque') : t('adminProducts.visible')}`);
                         }}
-                        aria-label="Basculer la visibilité"
+                        aria-label={t('adminProducts.colVisible')}
                         className={`relative h-6 w-11 rounded-full transition ${
                           p.isActive ? 'bg-stockgreen' : 'bg-neutral-200'
                         }`}
@@ -902,15 +948,15 @@ export default function AdminProducts() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => copyLandingLink(p)}
-                          aria-label="Copier le lien de campagne (Landing Page)"
-                          title="Copier le lien de campagne (Landing Page)"
+                          aria-label={t('adminProducts.copierLien')}
+                          title={t('adminProducts.copierLien')}
                           className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition hover:border-violetp hover:text-violetp"
                         >
                           <Megaphone size={13} />
                         </button>
                         <button
                           onClick={() => setEditing(p)}
-                          aria-label="Modifier"
+                          aria-label={t('adminProducts.modifier')}
                           className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition hover:border-ink hover:text-ink"
                         >
                           <Pencil size={13} />
@@ -920,11 +966,11 @@ export default function AdminProducts() {
                             onClick={() => {
                               deleteProduct(p.id);
                               setConfirmDelete(null);
-                              showToast(`${p.name} supprimé`);
+                              showToast(`${p.name} ${t('adminProducts.supprime')}`);
                             }}
                             className="flex h-8 items-center gap-1 rounded-lg bg-navred px-2.5 text-[10.5px] font-bold text-white"
                           >
-                            <Trash2 size={12} /> Confirmer
+                            <Trash2 size={12} /> {t('adminProducts.confirmer')}
                           </button>
                         ) : (
                           <button
@@ -932,7 +978,7 @@ export default function AdminProducts() {
                               setConfirmDelete(p.id);
                               setTimeout(() => setConfirmDelete((c) => (c === p.id ? null : c)), 3500);
                             }}
-                            aria-label="Supprimer"
+                            aria-label={t('adminProducts.supprimer')}
                             className="flex h-8 w-8 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition hover:border-navred hover:text-navred"
                           >
                             <Trash2 size={13} />
@@ -947,9 +993,7 @@ export default function AdminProducts() {
           </table>
         </div>
         {filtered.length === 0 && (
-          <p className="py-10 text-center text-[13px] text-neutral-400">
-            Aucun produit trouvé.
-          </p>
+          <p className="py-10 text-center text-[13px] text-neutral-400">{t('adminProducts.aucunProduit')}</p>
         )}
       </div>
 
@@ -968,8 +1012,7 @@ export default function AdminProducts() {
 
       <div className="mt-4 flex items-center gap-2 text-[11.5px] text-neutral-400">
         <Package size={13} />
-        Les modifications sont enregistrées directement dans Supabase et visibles
-        par les clients au prochain chargement de la boutique.
+        {t('adminProducts.noteSupabase')}
       </div>
     </div>
   );
