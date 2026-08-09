@@ -5,7 +5,8 @@ import { Search, PackageSearch, CheckCircle2, Circle, XCircle, Truck } from 'luc
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { ORDER_FLOW, ORDER_STATUS_LABELS, type OrderStatus } from '../lib/types';
+import { useLang } from '../context/LanguageContext';
+import { ORDER_FLOW, type OrderStatus } from '../lib/types';
 import { formatDA } from '../lib/format';
 
 interface TrackedItem {
@@ -37,6 +38,7 @@ const normalizeRef = (raw: string) => {
 
 export default function TrackOrderPage() {
   const [params] = useSearchParams();
+  const { t } = useLang();
   const [refInput, setRefInput] = useState(params.get('ref') ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export default function TrackOrderPage() {
     setSearched(true);
 
     if (!supabase || !isSupabaseConfigured) {
-      setError('Le suivi de commande n’est pas disponible pour le moment. Contactez-nous directement.');
+      setError(t('trackOrder.indisponible'));
       setLoading(false);
       return;
     }
@@ -61,11 +63,11 @@ export default function TrackOrderPage() {
 
     if (rpcError) {
       console.warn('[supabase] get_order_by_ref', rpcError.message);
-      setError('Une erreur est survenue. Réessayez dans un instant.');
+      setError(t('trackOrder.erreurGenerique'));
     } else {
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) {
-        setError(`Aucune commande trouvée pour la référence « ${cleanRef} ». Vérifiez le numéro reçu par SMS/WhatsApp.`);
+        setError(`${t('trackOrder.aucuneCommandePre')} ${cleanRef} ${t('trackOrder.aucuneCommandePost')}`);
       } else {
         setOrder(row as TrackedOrder);
       }
@@ -87,14 +89,12 @@ export default function TrackOrderPage() {
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:px-6">
         <div className="mb-8 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-            Suivi de commande
+            {t('trackOrder.eyebrow')}
           </p>
           <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            Où en est <span className="italic text-blush">ma commande</span> ?
+            {t('trackOrder.titlePre')} <span className="italic text-blush">{t('trackOrder.titlePost')}</span> ?
           </h1>
-          <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">
-            Entrez le numéro de référence reçu par SMS ou WhatsApp (ex. ORY-482913).
-          </p>
+          <p className="mt-3 text-[13px] leading-relaxed text-neutral-500">{t('trackOrder.sub')}</p>
         </div>
 
         <form onSubmit={onSubmit} className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function TrackOrderPage() {
             className="flex h-[46px] items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-white transition hover:bg-black disabled:opacity-40"
           >
             <Search size={15} />
-            <span className="hidden sm:inline">Suivre</span>
+            <span className="hidden sm:inline">{t('trackOrder.suivre')}</span>
           </button>
         </form>
 
@@ -127,7 +127,7 @@ export default function TrackOrderPage() {
               exit={{ opacity: 0 }}
               className="mt-10 text-center text-sm text-neutral-400"
             >
-              Recherche de votre commande…
+              {t('trackOrder.recherche')}
             </motion.div>
           )}
 
@@ -169,7 +169,7 @@ export default function TrackOrderPage() {
                       : 'bg-stock-soft text-stockgreen'
                   }`}
                 >
-                  {ORDER_STATUS_LABELS[order.status]}
+                  {t(`orderStatus.${order.status}` as const)}
                 </span>
               </div>
 
@@ -177,7 +177,7 @@ export default function TrackOrderPage() {
                 {isCancelled ? (
                   <div className="flex items-center gap-2.5 text-sm text-navred">
                     <XCircle size={18} />
-                    Cette commande a été annulée.
+                    {t('trackOrder.annulee')}
                   </div>
                 ) : (
                   <ol className="flex items-center justify-between">
@@ -197,7 +197,7 @@ export default function TrackOrderPage() {
                                 done ? 'text-ink' : 'text-neutral-400'
                               }`}
                             >
-                              {ORDER_STATUS_LABELS[step]}
+                              {t(`orderStatus.${step}` as const)}
                             </span>
                           </div>
                           {!isLast && (
@@ -216,7 +216,7 @@ export default function TrackOrderPage() {
                 {order.yalidine_tracking && (
                   <div className="mt-5 flex items-center gap-2.5 rounded-xl bg-tagblue/10 px-4 py-3 text-[13px] font-medium text-tagblue">
                     <Truck size={16} />
-                    Numéro de suivi transporteur : {order.yalidine_tracking}
+                    {t('trackOrder.numeroSuivi')} {order.yalidine_tracking}
                   </div>
                 )}
 
@@ -233,19 +233,20 @@ export default function TrackOrderPage() {
 
                 <div className="mt-4 space-y-1.5 border-t border-black/8 pt-4 text-[13px]">
                   <div className="flex justify-between text-neutral-500">
-                    <span>Livraison</span>
+                    <span>{t('trackOrder.livraisonLabel')}</span>
                     <span>
-                      {order.delivery_type === 'domicile' ? 'À domicile' : 'Stop desk'} — {order.commune}, {order.wilaya_name}
+                      {order.delivery_type === 'domicile' ? t('checkout.domicile') : t('trackOrder.stopDesk')} —{' '}
+                      {order.commune}, {order.wilaya_name}
                     </span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-stockgreen">
-                      <span>Remise</span>
+                      <span>{t('trackOrder.remise')}</span>
                       <span>-{formatDA(order.discount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-1 text-[15px] font-bold text-ink">
-                    <span>Total à payer</span>
+                    <span>{t('trackOrder.totalAPayer')}</span>
                     <span>{formatDA(order.total)}</span>
                   </div>
                 </div>
@@ -260,7 +261,7 @@ export default function TrackOrderPage() {
               animate={{ opacity: 1 }}
               className="mt-10 text-center text-[12.5px] text-neutral-400"
             >
-              Le numéro de référence vous a été envoyé après votre commande.
+              {t('trackOrder.hint')}
             </motion.p>
           )}
         </AnimatePresence>
