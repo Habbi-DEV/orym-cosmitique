@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
-import { MOVEMENT_LABELS, type MovementKind } from '../lib/types';
+import { useLang } from '../context/LanguageContext';
+import { type MovementKind } from '../lib/types';
 import { formatDA } from '../lib/format';
 import { downloadCsv } from '../lib/exportCsv';
 
@@ -40,6 +41,7 @@ function MovementModal({
 }) {
   const { catalog, addMovement } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [kind, setKind] = useState<MovementKind>(presetKind ?? 'depot');
   const [productId, setProductId] = useState(presetProduct ?? catalog[0]?.id ?? '');
   const [qty, setQty] = useState(10);
@@ -49,9 +51,16 @@ function MovementModal({
     if (!productId || qty <= 0) return;
     addMovement(kind, productId, qty, reason.trim());
     const meta = KIND_META[kind];
-    showToast(`${MOVEMENT_LABELS[kind]} enregistré — ${meta.sign}${qty} unité(s)`);
+    showToast(`${t(`movementKind.${kind}` as const)} ${t('adminInventory.mouvementEnregistre')} — ${meta.sign}${qty} ${t('adminInventory.unitesLabel')}`);
     onClose();
   };
+
+  const motifPlaceholder =
+    kind === 'depot'
+      ? t('adminInventory.motifDepot')
+      : kind === 'retrait'
+        ? t('adminInventory.motifRetrait')
+        : t('adminInventory.motifReintegration');
 
   return (
     <motion.div
@@ -70,10 +79,10 @@ function MovementModal({
         className="w-full rounded-t-[25px] bg-white p-6 shadow-2xl sm:max-w-md sm:rounded-[25px]"
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-serif text-2xl font-semibold">Nouveau mouvement</h2>
+          <h2 className="font-serif text-2xl font-semibold">{t('adminInventory.nouveauMouvement')}</h2>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t('common.fermer')}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-cream text-neutral-500 hover:bg-neutral-200"
           >
             <X size={16} />
@@ -83,7 +92,7 @@ function MovementModal({
         <div className="mt-5 space-y-4">
           <div>
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-              Type de mouvement
+              {t('adminInventory.typeMouvement')}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.keys(KIND_META) as MovementKind[]).map((k) => {
@@ -100,7 +109,7 @@ function MovementModal({
                       <Meta.icon size={15} />
                     </span>
                     <span className="text-[10px] font-bold leading-tight">
-                      {MOVEMENT_LABELS[k].split(' ')[0]}
+                      {t(`movementKind.${k}` as const)}
                     </span>
                   </button>
                 );
@@ -110,12 +119,12 @@ function MovementModal({
 
           <div>
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-              Produit
+              {t('adminInventory.produit')}
             </p>
             <select value={productId} onChange={(e) => setProductId(e.target.value)} className={inputCls}>
               {catalog.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} — stock actuel : {p.stock}
+                  {p.name} — {t('adminInventory.stockActuel')} : {p.stock}
                 </option>
               ))}
             </select>
@@ -124,13 +133,13 @@ function MovementModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Quantité
+                {t('adminInventory.quantite')}
               </p>
               <div className="flex items-center gap-2 rounded-xl border border-neutral-200 px-3 py-2.5">
                 <button
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
                   className="font-bold text-neutral-400 hover:text-ink"
-                  aria-label="Moins"
+                  aria-label="-"
                 >
                   -
                 </button>
@@ -144,7 +153,7 @@ function MovementModal({
                 <button
                   onClick={() => setQty((q) => q + 1)}
                   className="font-bold text-neutral-400 hover:text-ink"
-                  aria-label="Plus"
+                  aria-label="+"
                 >
                   +
                 </button>
@@ -152,18 +161,12 @@ function MovementModal({
             </div>
             <div>
               <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Motif
+                {t('adminInventory.motif')}
               </p>
               <input
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={
-                  kind === 'depot'
-                    ? 'Réception fournisseur…'
-                    : kind === 'retrait'
-                      ? 'Casse, vente directe…'
-                      : 'Retour client…'
-                }
+                placeholder={motifPlaceholder}
                 className={inputCls}
               />
             </div>
@@ -173,7 +176,7 @@ function MovementModal({
             onClick={submit}
             className="w-full rounded-full bg-ink py-3.5 text-[13.5px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
           >
-            Enregistrer au grand livre
+            {t('adminInventory.enregistrerGrandLivre')}
           </button>
         </div>
       </motion.div>
@@ -184,6 +187,7 @@ function MovementModal({
 export default function AdminInventory() {
   const { catalog, lowStock, ledger } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
   const [tab, setTab] = useState<'stock' | 'ledger'>('stock');
   const [query, setQuery] = useState('');
   const [kindFilter, setKindFilter] = useState<MovementKind | 'tous'>('tous');
@@ -205,11 +209,11 @@ export default function AdminInventory() {
         Actif: p.isActive ? 'Oui' : 'Non',
       })),
     );
-    showToast(`${catalog.length} référence(s) exportée(s)`);
+    showToast(`${catalog.length} ${t('adminInventory.colProduit').toLowerCase()}(s)`);
   };
   const exportLedgerCsv = () => {
     if (filteredLedger.length === 0) {
-      showToast('Aucun mouvement à exporter');
+      showToast(t('adminInventory.aucunMouvement'));
       return;
     }
     downloadCsv(
@@ -217,12 +221,12 @@ export default function AdminInventory() {
       filteredLedger.map((m) => ({
         Date: new Date(m.at).toLocaleString('fr-FR'),
         Produit: m.productName,
-        Type: MOVEMENT_LABELS[m.kind],
+        Type: t(`movementKind.${m.kind}` as const),
         Quantité: m.qty,
         Motif: m.reason,
       })),
     );
-    showToast(`${filteredLedger.length} mouvement(s) exporté(s)`);
+    showToast(`${filteredLedger.length} ${t('adminInventory.colMouvement').toLowerCase()}(s)`);
   };
   const filtered = useMemo(
     () => catalog.filter((p) => p.name.toLowerCase().includes(query.trim().toLowerCase())),
@@ -240,25 +244,21 @@ export default function AdminInventory() {
   );
 
   const kpis = [
-    { icon: Package, label: 'Références actives', value: String(catalog.length), chip: 'bg-blue-100 text-blue-700' },
-    { icon: Banknote, label: 'Valeur du stock (coût)', value: formatDA(stockValue), chip: 'bg-blush-soft text-[#8E4254]' },
-    { icon: AlertTriangle, label: 'Alertes stock faible', value: String(lowStock.length), chip: 'bg-red-100 text-navred' },
-    { icon: Activity, label: 'Mouvements au journal', value: String(ledger.length), chip: 'bg-violetp-soft text-violetp-dark' },
+    { icon: Package, label: t('adminInventory.kpiReferences'), value: String(catalog.length), chip: 'bg-blue-100 text-blue-700' },
+    { icon: Banknote, label: t('adminInventory.kpiValeurStock'), value: formatDA(stockValue), chip: 'bg-blush-soft text-[#8E4254]' },
+    { icon: AlertTriangle, label: t('adminInventory.kpiAlertes'), value: String(lowStock.length), chip: 'bg-red-100 text-navred' },
+    { icon: Activity, label: t('adminInventory.kpiMouvements'), value: String(ledger.length), chip: 'bg-violetp-soft text-violetp-dark' },
   ];
 
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-            Entrepôt
-          </p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">{t('adminInventory.entrepot')}</p>
           <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            Inventaire & Grand Livre
+            {t('adminInventory.titre')}
           </h1>
-          <p className="mt-1 text-[13px] text-neutral-500">
-            Suivi en temps réel des stocks et des mouvements.
-          </p>
+          <p className="mt-1 text-[13px] text-neutral-500">{t('adminInventory.sub')}</p>
         </div>
         <div className="flex items-center gap-2.5">
           <button
@@ -266,14 +266,14 @@ export default function AdminInventory() {
             className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-3 text-[13px] font-bold text-ink transition hover:bg-cream"
           >
             <Download size={15} />
-            Exporter CSV
+            {t('adminInventory.exporterCsv')}
           </button>
           <button
             onClick={() => setModal({})}
             className="flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-[13px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
           >
             <Plus size={16} />
-            Nouveau mouvement
+            {t('adminInventory.nouveauMouvement')}
           </button>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function AdminInventory() {
         <div className="mt-5 rounded-[20px] border border-amber-200 bg-amber-50 p-5">
           <p className="flex items-center gap-2 text-[13px] font-bold text-amber-800">
             <AlertTriangle size={16} />
-            {lowStock.length} produit(s) sous le seuil de sécurité (8 unités)
+            {lowStock.length} {t('adminInventory.alerteSeuilPre')}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {lowStock.map((p) => (
@@ -313,7 +313,7 @@ export default function AdminInventory() {
                   onClick={() => setModal({ product: p.id, kind: 'depot' })}
                   className="rounded-full bg-stockgreen px-2 py-0.5 text-[10px] font-bold text-white"
                 >
-                  Réappro
+                  {t('adminInventory.reappro')}
                 </button>
               </span>
             ))}
@@ -326,8 +326,8 @@ export default function AdminInventory() {
         <div className="flex rounded-full border border-neutral-200 bg-white p-1">
           {(
             [
-              { v: 'stock', label: 'Niveaux de stock' },
-              { v: 'ledger', label: 'Grand livre' },
+              { v: 'stock', label: t('adminInventory.tabStock') },
+              { v: 'ledger', label: t('adminInventory.tabLedger') },
             ] as const
           ).map(({ v, label }) => (
             <button
@@ -346,7 +346,7 @@ export default function AdminInventory() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher…"
+            placeholder={t('adminInventory.rechercherPlaceholder')}
             className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-[12.5px] outline-none transition focus:border-blush focus:ring-2 focus:ring-blush/20"
           />
         </div>
@@ -356,7 +356,7 @@ export default function AdminInventory() {
             className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-2.5 text-[12px] font-bold text-ink transition hover:bg-cream"
           >
             <Download size={13} />
-            CSV
+            {t('adminInventory.csv')}
           </button>
         )}
       </div>
@@ -368,11 +368,11 @@ export default function AdminInventory() {
             <table className="w-full min-w-[720px] text-left">
               <thead>
                 <tr className="border-b border-black/5 bg-cream/60 text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                  <th className="px-5 py-3.5">Produit</th>
-                  <th className="px-4 py-3.5">Stock</th>
-                  <th className="px-4 py-3.5">Variantes</th>
-                  <th className="px-4 py-3.5">Valeur (coût)</th>
-                  <th className="px-4 py-3.5 text-right">Mouvement</th>
+                  <th className="px-5 py-3.5">{t('adminInventory.colProduit')}</th>
+                  <th className="px-4 py-3.5">{t('adminInventory.colStock')}</th>
+                  <th className="px-4 py-3.5">{t('adminInventory.colVariantes')}</th>
+                  <th className="px-4 py-3.5">{t('adminInventory.colValeur')}</th>
+                  <th className="px-4 py-3.5 text-right">{t('adminInventory.colMouvement')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
@@ -393,7 +393,7 @@ export default function AdminInventory() {
                           }`}
                         >
                           {low && <AlertTriangle size={11} />}
-                          {p.stock} unités
+                          {p.stock} {t('adminInventory.unites')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[12px] text-neutral-500">
@@ -408,17 +408,17 @@ export default function AdminInventory() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setModal({ product: p.id, kind: 'depot' })}
-                            title="Dépôt (entrée)"
+                            title={t('adminInventory.depot')}
                             className="flex h-8 items-center gap-1 rounded-lg bg-stock-soft px-2.5 text-[11px] font-bold text-stockgreen transition hover:brightness-95"
                           >
-                            <ArrowDownToLine size={12} /> Dépôt
+                            <ArrowDownToLine size={12} /> {t('adminInventory.depot')}
                           </button>
                           <button
                             onClick={() => setModal({ product: p.id, kind: 'retrait' })}
-                            title="Retrait (sortie)"
+                            title={t('adminInventory.retrait')}
                             className="flex h-8 items-center gap-1 rounded-lg bg-red-50 px-2.5 text-[11px] font-bold text-navred transition hover:bg-red-100"
                           >
-                            <ArrowUpFromLine size={12} /> Retrait
+                            <ArrowUpFromLine size={12} /> {t('adminInventory.retrait')}
                           </button>
                         </div>
                       </td>
@@ -445,7 +445,7 @@ export default function AdminInventory() {
                     : 'border border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300'
                 }`}
               >
-                {k === 'tous' ? 'Tous' : MOVEMENT_LABELS[k]}
+                {k === 'tous' ? t('adminOrders.toutes') : t(`movementKind.${k}` as const)}
               </button>
             ))}
           </div>
@@ -454,12 +454,12 @@ export default function AdminInventory() {
               <table className="w-full min-w-[760px] text-left">
                 <thead>
                   <tr className="border-b border-black/5 bg-cream/60 text-[10.5px] font-bold uppercase tracking-wider text-neutral-400">
-                    <th className="px-5 py-3.5">Date</th>
-                    <th className="px-4 py-3.5">Type</th>
-                    <th className="px-4 py-3.5">Produit</th>
-                    <th className="px-4 py-3.5">Qté</th>
-                    <th className="px-4 py-3.5">Motif</th>
-                    <th className="px-4 py-3.5">Auteur</th>
+                    <th className="px-5 py-3.5">{t('adminInventory.colDate')}</th>
+                    <th className="px-4 py-3.5">{t('adminInventory.colType')}</th>
+                    <th className="px-4 py-3.5">{t('adminInventory.colProduit')}</th>
+                    <th className="px-4 py-3.5">{t('adminInventory.colQte')}</th>
+                    <th className="px-4 py-3.5">{t('adminInventory.colMotif')}</th>
+                    <th className="px-4 py-3.5">{t('adminInventory.colAuteur')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5">
@@ -483,7 +483,7 @@ export default function AdminInventory() {
                             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-bold ${Meta.chip}`}
                           >
                             <Meta.icon size={11} />
-                            {MOVEMENT_LABELS[m.kind].split(' ')[0]}
+                            {t(`movementKind.${m.kind}` as const)}
                           </span>
                         </td>
                         <td className="max-w-[200px] truncate px-4 py-3 text-[12.5px] font-semibold">
@@ -509,7 +509,7 @@ export default function AdminInventory() {
             </div>
             {filteredLedger.length === 0 && (
               <p className="py-10 text-center text-[13px] text-neutral-400">
-                Aucun mouvement ne correspond aux filtres.
+                {t('adminInventory.aucunMouvement')}
               </p>
             )}
           </div>
@@ -518,8 +518,7 @@ export default function AdminInventory() {
 
       <div className="mt-4 flex items-center gap-2 text-[11.5px] text-neutral-400">
         <Warehouse size={13} />
-        Les commandes en ligne décrémentent automatiquement le stock et écrivent un
-        retrait au grand livre.
+        {t('adminInventory.noteAuto')}
       </div>
 
       <AnimatePresence>
