@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ShoppingCart, Banknote, Users, Clock, RefreshCw } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useLang } from '../context/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { formatDA } from '../lib/format';
 
@@ -21,23 +22,24 @@ interface AbandonedGroup {
 // Un panier est considéré « abandonné » s'il n'a pas bougé depuis ce délai
 const ABANDON_AFTER_MS = 2 * 60 * 60 * 1000; // 2 heures
 
-function timeAgo(iso: string): string {
-  const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (diffMin < 60) return `il y a ${diffMin} min`;
-  const h = Math.round(diffMin / 60);
-  if (h < 24) return `il y a ${h} h`;
-  return `il y a ${Math.round(h / 24)} j`;
-}
-
 export default function AdminAbandonedCarts() {
   const { catalog } = useData();
+  const { t } = useLang();
   const [rows, setRows] = useState<RawCartRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const timeAgo = (iso: string): string => {
+    const diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (diffMin < 60) return `${t('adminAbandonedCarts.ilYA')} ${diffMin} ${t('adminAbandonedCarts.min')}`;
+    const h = Math.round(diffMin / 60);
+    if (h < 24) return `${t('adminAbandonedCarts.ilYA')} ${h} ${t('adminAbandonedCarts.h')}`;
+    return `${t('adminAbandonedCarts.ilYA')} ${Math.round(h / 24)} ${t('adminAbandonedCarts.j')}`;
+  };
+
   const load = async () => {
     if (!supabase) {
-      setError('Supabase non configuré.');
+      setError(t('adminAbandonedCarts.supabaseNonConfigure'));
       return;
     }
     setLoading(true);
@@ -86,16 +88,16 @@ export default function AdminAbandonedCarts() {
   }, [rows, catalog]);
 
   const kpis = [
-    { icon: Users, label: 'Paniers abandonnés', value: String(groups.length), chip: 'bg-red-100 text-navred' },
+    { icon: Users, label: t('adminAbandonedCarts.kpiPaniers'), value: String(groups.length), chip: 'bg-red-100 text-navred' },
     {
       icon: Banknote,
-      label: 'Valeur totale en jeu',
+      label: t('adminAbandonedCarts.kpiValeur'),
       value: formatDA(groups.reduce((s, g) => s + g.total, 0)),
       chip: 'bg-blush-soft text-[#8E4254]',
     },
     {
       icon: ShoppingCart,
-      label: 'Articles concernés',
+      label: t('adminAbandonedCarts.kpiArticles'),
       value: String(groups.reduce((s, g) => s + g.items.reduce((n, i) => n + i.qty, 0), 0)),
       chip: 'bg-blue-100 text-blue-700',
     },
@@ -105,29 +107,28 @@ export default function AdminAbandonedCarts() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">Marketing</p>
-          <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            Paniers abandonnés
-          </h1>
-          <p className="mt-1 text-[13px] text-neutral-500">
-            Visiteurs ayant ajouté des produits sans finaliser leur commande depuis plus de 2 h.
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
+            {t('adminAbandonedCarts.marketing')}
           </p>
+          <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+            {t('adminAbandonedCarts.titre')}
+          </h1>
+          <p className="mt-1 text-[13px] text-neutral-500">{t('adminAbandonedCarts.sub')}</p>
         </div>
         <button
           onClick={() => void load()}
           className="flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-[13px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
         >
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-          Actualiser
+          {t('adminAbandonedCarts.actualiser')}
         </button>
       </div>
 
       {error && (
         <div className="mb-5 rounded-2xl border border-navred/20 bg-red-50 p-4 text-[13px] text-navred">
-          Impossible de charger les paniers : {error}
+          {t('adminAbandonedCarts.erreurChargement')} {error}
           <br />
-          Vérifiez que le patch <code>supabase/schema-patch-abandoned-carts.sql</code> a bien été exécuté
-          (policy de lecture staff sur <code>cart_items</code>).
+          {t('adminAbandonedCarts.erreurHint')}
         </div>
       )}
 
@@ -149,7 +150,7 @@ export default function AdminAbandonedCarts() {
       <div className="mt-6 space-y-3">
         {groups.length === 0 && !loading && (
           <div className="rounded-2xl border border-black/[0.06] bg-white p-8 text-center text-[13px] text-neutral-500">
-            Aucun panier abandonné pour le moment 🎉
+            {t('adminAbandonedCarts.aucunPanier')}
           </div>
         )}
         {groups.map((g) => (
