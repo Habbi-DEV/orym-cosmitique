@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
 import { testEvent } from '../lib/meta';
 import { formatDA } from '../lib/format';
 import schemaSql from '../../supabase/schema.sql?raw';
@@ -93,6 +94,7 @@ export default function AdminSettings() {
     addCommune,
   } = useData();
   const { showToast } = useStore();
+  const { t } = useLang();
 
   // Email form
   const [newEmail, setNewEmail] = useState('');
@@ -131,9 +133,7 @@ export default function AdminSettings() {
   );
 
   const copySql = () => {
-    void navigator.clipboard.writeText(schemaSql).then(() =>
-      showToast('Schéma SQL copié dans le presse-papier'),
-    );
+    void navigator.clipboard.writeText(schemaSql).then(() => showToast(t('adminSettings.sqlCopie')));
   };
 
   const downloadSql = () => {
@@ -150,14 +150,14 @@ export default function AdminSettings() {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6">
         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
-          Configuration
+          {t('adminSettings.configuration')}
         </p>
         <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-          Paramètres
+          {t('adminSettings.titre')}
         </h1>
         <p className="mt-1 flex items-center gap-1.5 text-[13px] text-neutral-500">
           <ShieldCheck size={14} className="text-stockgreen" />
-          Zone sécurisée — réservée au Super Admin.
+          {t('adminSettings.zoneSecurisee')}
         </p>
       </div>
 
@@ -166,11 +166,11 @@ export default function AdminSettings() {
         <Card
           icon={Mail}
           chip="bg-blue-100 text-blue-700"
-          title="Changer d’adresse e-mail"
-          desc={`Connecté en tant que ${session?.email ?? ''}. La réauthentification est requise.`}
+          title={t('adminSettings.changerEmail')}
+          desc={`${t('adminSettings.connecteEnTant')} ${session?.email ?? ''}. ${t('adminSettings.reauthRequise')}`}
         >
           <div className="space-y-3.5">
-            <Field label="Nouvelle adresse e-mail">
+            <Field label={t('adminSettings.nouvelleAdresse')}>
               <input
                 type="email"
                 value={newEmail}
@@ -179,7 +179,7 @@ export default function AdminSettings() {
                 className={inputCls}
               />
             </Field>
-            <Field label="Mot de passe actuel (confirmation)">
+            <Field label={t('adminSettings.mdpActuelConfirm')}>
               <input
                 type="password"
                 value={emailPwd}
@@ -201,23 +201,20 @@ export default function AdminSettings() {
               }}
               className="w-full rounded-full bg-ink py-3 text-[13px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
             >
-              Mettre à jour l’e-mail
+              {t('adminSettings.metreAJourEmail')}
             </button>
-            <p className="text-[11px] leading-relaxed text-neutral-400">
-              Supabase Auth enverra un e-mail de vérification aux deux adresses avant
-              d’appliquer le changement.
-            </p>
+            <p className="text-[11px] leading-relaxed text-neutral-400">{t('adminSettings.noteEmailVerif')}</p>
           </div>
         </Card>
 
         <Card
           icon={KeyRound}
           chip="bg-violetp-soft text-violetp-dark"
-          title="Changer de mot de passe"
-          desc="Minimum 8 caractères, incluant lettres et chiffres."
+          title={t('adminSettings.changerMdp')}
+          desc={t('adminSettings.mdpDesc')}
         >
           <div className="space-y-3.5">
-            <Field label="Mot de passe actuel">
+            <Field label={t('adminSettings.mdpActuel')}>
               <input
                 type={showPwds ? 'text' : 'password'}
                 value={curPwd}
@@ -227,7 +224,7 @@ export default function AdminSettings() {
               />
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Nouveau mot de passe">
+              <Field label={t('adminSettings.nouveauMdp')}>
                 <input
                   type={showPwds ? 'text' : 'password'}
                   value={nextPwd}
@@ -236,7 +233,7 @@ export default function AdminSettings() {
                   autoComplete="new-password"
                 />
               </Field>
-              <Field label="Confirmation">
+              <Field label={t('adminSettings.confirmation')}>
                 <input
                   type={showPwds ? 'text' : 'password'}
                   value={confPwd}
@@ -251,18 +248,18 @@ export default function AdminSettings() {
               className="flex items-center gap-1.5 text-[11.5px] font-semibold text-neutral-400 hover:text-ink"
             >
               {showPwds ? <EyeOff size={13} /> : <Eye size={13} />}
-              {showPwds ? 'Masquer' : 'Afficher'} les mots de passe
+              {showPwds ? t('adminSettings.masquer') : t('adminSettings.afficher')} les mots de passe
             </button>
             {nextPwd && confPwd && nextPwd !== confPwd && (
               <p className="rounded-xl bg-red-50 px-4 py-2.5 text-[12.5px] font-semibold text-navred">
-                Les deux mots de passe ne correspondent pas.
+                {t('adminSettings.mdpDifferents')}
               </p>
             )}
             <Feedback result={pwdResult} />
             <button
               onClick={async () => {
                 if (nextPwd !== confPwd) {
-                  setPwdResult({ ok: false, message: 'La confirmation ne correspond pas.' });
+                  setPwdResult({ ok: false, message: t('adminSettings.confirmNonCorrespond') });
                   return;
                 }
                 const res = await changePassword(curPwd, nextPwd);
@@ -275,7 +272,7 @@ export default function AdminSettings() {
               }}
               className="w-full rounded-full bg-ink py-3 text-[13px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
             >
-              Mettre à jour le mot de passe
+              {t('adminSettings.metreAJourMdp')}
             </button>
           </div>
         </Card>
@@ -286,12 +283,12 @@ export default function AdminSettings() {
         <Card
           icon={Facebook}
           chip="bg-[#1877F2]/10 text-[#1877F2]"
-          title="Pixels & Tracking (Meta + TikTok)"
-          desc="Pixel Meta, Conversions API et Pixel TikTok pour mesurer les ventes de vos campagnes publicitaires."
+          title={t('adminSettings.pixelsTitre')}
+          desc={t('adminSettings.pixelsDesc')}
         >
           <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
             <div className="space-y-3.5">
-              <Field label="Meta Pixel ID">
+              <Field label={t('adminSettings.metaPixelId')}>
                 <input
                   value={pixelId}
                   onChange={(e) => setPixelId(e.target.value.replace(/\D/g, ''))}
@@ -300,7 +297,7 @@ export default function AdminSettings() {
                   className={inputCls}
                 />
               </Field>
-              <Field label="TikTok Pixel ID">
+              <Field label={t('adminSettings.tiktokPixelId')}>
                 <div className="relative">
                   <Music2 size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                   <input
@@ -311,25 +308,23 @@ export default function AdminSettings() {
                   />
                 </div>
               </Field>
-              <Field label="Token Conversions API">
+              <Field label={t('adminSettings.tokenCapi')}>
                 <input
                   type="password"
                   value={capiToken}
                   onChange={(e) => setCapiToken(e.target.value)}
-                  placeholder="EAAG… (token d’accès serveur)"
+                  placeholder={t('adminSettings.tokenCapiPlaceholder')}
                   className={inputCls}
                 />
               </Field>
               <div className="flex items-center justify-between rounded-xl border border-neutral-200 px-4 py-3">
                 <div>
-                  <p className="text-[13px] font-bold">Suivi activé</p>
-                  <p className="text-[11px] text-neutral-400">
-                    Injecte le pixel sur la boutique
-                  </p>
+                  <p className="text-[13px] font-bold">{t('adminSettings.suiviActive')}</p>
+                  <p className="text-[11px] text-neutral-400">{t('adminSettings.suiviDesc')}</p>
                 </div>
                 <button
                   onClick={() => setMetaEnabled((s) => !s)}
-                  aria-label="Activer le suivi"
+                  aria-label={t('adminSettings.suiviActive')}
                   className={`relative h-6 w-11 rounded-full transition ${
                     metaEnabled ? 'bg-stockgreen' : 'bg-neutral-200'
                   }`}
@@ -345,12 +340,12 @@ export default function AdminSettings() {
                 <button
                   onClick={() => {
                     setMetaConfig({ pixelId, capiToken, tiktokPixelId: tiktokId, enabled: metaEnabled });
-                    showToast('Configuration Méta enregistrée');
+                    showToast(t('adminSettings.configEnregistree'));
                   }}
                   className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink py-3 text-[13px] font-bold text-white transition hover:bg-black active:scale-[0.98]"
                 >
                   <Check size={15} />
-                  Enregistrer
+                  {t('adminSettings.enregistrer')}
                 </button>
                 <button
                   onClick={() => {
@@ -360,13 +355,13 @@ export default function AdminSettings() {
                   className="flex items-center justify-center gap-2 rounded-full border border-neutral-200 px-4 py-3 text-[12.5px] font-bold text-neutral-600 transition hover:border-ink hover:text-ink"
                 >
                   <FlaskConical size={15} />
-                  Test
+                  {t('adminSettings.test')}
                 </button>
               </div>
             </div>
             <div className="rounded-2xl bg-cream p-5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Événements trackés sur la boutique
+                {t('adminSettings.evenementsTrackes')}
               </p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'Purchase'].map(
@@ -381,7 +376,7 @@ export default function AdminSettings() {
                 )}
               </div>
               <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                TikTok — événements standards
+                {t('adminSettings.tiktokEvenements')}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {['PageView', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'CompletePayment'].map(
@@ -395,11 +390,7 @@ export default function AdminSettings() {
                   ),
                 )}
               </div>
-              <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-500">
-                Le token CAPI n’est jamais exposé au navigateur : en production, les
-                événements serveur transitent par une Supabase Edge Function sécurisée
-                (voir schéma SQL, table meta_config + RLS).
-              </p>
+              <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-500">{t('adminSettings.noteCapi')}</p>
             </div>
           </div>
         </Card>
@@ -410,8 +401,8 @@ export default function AdminSettings() {
         <Card
           icon={Truck}
           chip="bg-stock-soft text-stockgreen"
-          title="Tarifs de livraison"
-          desc="Grille des 58 wilayas — toute modification est appliquée instantanément au calculateur du checkout."
+          title={t('adminSettings.tarifsLivraison')}
+          desc={t('adminSettings.tarifsDesc')}
         >
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="relative w-full max-w-xs">
@@ -419,24 +410,24 @@ export default function AdminSettings() {
               <input
                 value={shipQuery}
                 onChange={(e) => setShipQuery(e.target.value)}
-                placeholder="Rechercher une wilaya…"
+                placeholder={t('adminSettings.rechercherWilaya')}
                 className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-[12.5px] outline-none transition focus:border-blush focus:ring-2 focus:ring-blush/20"
               />
             </div>
             {savedAt && (
               <span className="flex items-center gap-1.5 text-[11.5px] font-semibold text-stockgreen">
                 <Check size={13} />
-                Grille synchronisée à {savedAt}
+                {t('adminSettings.grilleSync')} {savedAt}
               </span>
             )}
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-black/[0.06]">
             <div className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-3 border-b border-black/5 bg-cream/70 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 sm:grid-cols-[54px_1fr_110px_110px_36px]">
-              <span>Code</span>
-              <span>Wilaya</span>
-              <span className="text-right">Domicile</span>
-              <span className="text-right">Relais</span>
+              <span>{t('adminSettings.code')}</span>
+              <span>{t('adminSettings.wilaya')}</span>
+              <span className="text-right">{t('adminSettings.domicile')}</span>
+              <span className="text-right">{t('adminSettings.relais')}</span>
               <span />
             </div>
             <div className="max-h-[460px] overflow-y-auto">
@@ -451,7 +442,7 @@ export default function AdminSettings() {
                       <span className="truncate text-[12.5px] font-semibold">
                         {w.name}
                         <span className="ml-1.5 text-[10px] font-medium text-neutral-400">
-                          {w.communes.length} communes
+                          {w.communes.length} {t('adminSettings.communesMot')}
                         </span>
                       </span>
                       <input
@@ -505,7 +496,7 @@ export default function AdminSettings() {
                                 <td className="py-1.5 text-[12px] font-medium">{co.name}</td>
                                 <td className="w-32 py-1.5">
                                   <div className="flex items-center justify-end gap-1.5">
-                                    <span className="text-[10px] text-neutral-400">extra</span>
+                                    <span className="text-[10px] text-neutral-400">{t('adminSettings.extra')}</span>
                                     <input
                                       type="number"
                                       min={0}
@@ -533,7 +524,7 @@ export default function AdminSettings() {
                             onChange={(e) =>
                               setNewCommune((s) => ({ ...s, [w.code]: e.target.value }))
                             }
-                            placeholder="Ajouter une commune…"
+                            placeholder={t('adminSettings.ajouterCommune')}
                             className="flex-1 rounded-lg border border-dashed border-neutral-300 bg-white px-3 py-2 text-[12px] outline-none focus:border-blush"
                           />
                           <button
@@ -543,12 +534,12 @@ export default function AdminSettings() {
                                 addCommune(w.code, name);
                                 setNewCommune((s) => ({ ...s, [w.code]: '' }));
                                 markSaved();
-                                showToast(`Commune « ${name} » ajoutée à ${w.name}`);
+                                showToast(`${t('adminSettings.communeAjoutee')} ${w.name} : « ${name} »`);
                               }
                             }}
                             className="flex items-center gap-1 rounded-lg bg-ink px-3 text-[11px] font-bold text-white"
                           >
-                            <Plus size={12} /> Ajouter
+                            <Plus size={12} /> {t('adminSettings.ajouter')}
                           </button>
                         </div>
                       </div>
@@ -560,37 +551,31 @@ export default function AdminSettings() {
           </div>
 
           <p className="mt-3 text-[11.5px] text-neutral-400">
-            Exemple : total livraison = tarif du mode choisi + extra de la commune. Essayez une
-            valeur comme {formatDA(600)} puis ouvrez le checkout boutique pour vérifier.
+            {t('adminSettings.exempleLivraison')} {formatDA(600)} {t('adminSettings.puisOuvrez')}
           </p>
         </Card>
       </div>
 
       {/* SQL Schema */}
       <div className="mt-5">
-        <Card
-          icon={Database}
-          chip="bg-ink text-blush"
-          title="Base de données — Schéma SQL Supabase"
-          desc="Schéma complet avec tables, index, triggers et politiques RLS strictes, prêt à coller dans le SQL Editor Supabase."
-        >
+        <Card icon={Database} chip="bg-ink text-blush" title={t('adminSettings.schemaSql')} desc={t('adminSettings.schemaSqlDesc')}>
           <div className="mb-3 flex gap-2">
             <button
               onClick={copySql}
               className="flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[12px] font-bold text-white transition hover:bg-black"
             >
               <Copy size={14} />
-              Copier le SQL
+              {t('adminSettings.copierSql')}
             </button>
             <button
               onClick={downloadSql}
               className="flex items-center gap-2 rounded-full border border-neutral-200 px-4 py-2.5 text-[12px] font-bold text-neutral-600 transition hover:border-ink hover:text-ink"
             >
               <Download size={14} />
-              Télécharger .sql
+              {t('adminSettings.telechargerSql')}
             </button>
             <span className="ml-auto hidden items-center gap-1.5 self-center text-[11px] font-semibold text-stockgreen sm:flex">
-              <ShieldCheck size={13} /> RLS activé sur 14 tables
+              <ShieldCheck size={13} /> {t('adminSettings.rlsActif')}
             </span>
           </div>
           <pre className="max-h-[420px] overflow-auto rounded-2xl bg-ink p-5 font-mono text-[11px] leading-relaxed text-white/80">
@@ -601,26 +586,18 @@ export default function AdminSettings() {
 
       {/* Export projet */}
       <div className="mt-5">
-        <Card
-          icon={Archive}
-          chip="bg-violetp-soft text-violetp-dark"
-          title="Export du projet"
-          desc="Téléchargez l'intégralité du code source (boutique + admin + schéma SQL) en un clic."
-        >
+        <Card icon={Archive} chip="bg-violetp-soft text-violetp-dark" title={t('adminSettings.exportProjet')} desc={t('adminSettings.exportProjetDesc')}>
           <div className="flex flex-wrap items-center gap-3">
             <a
               href="/oryam-cosmetics-source.zip"
               download="oryam-cosmetics-source.zip"
-              onClick={() => showToast("Téléchargement de l'archive source lancé")}
+              onClick={() => showToast(t('adminSettings.telechargementLance'))}
               className="flex items-center gap-2 rounded-full bg-violetp px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-violetp/30 transition hover:bg-violetp-dark active:scale-[0.98]"
             >
               <Download size={15} />
-              Télécharger le projet complet (.zip)
+              {t('adminSettings.telechargerProjet')}
             </a>
-            <p className="text-[11.5px] text-neutral-400">
-              Archive regénérée à chaque build — inclut src/, supabase/, scripts/ et la
-              configuration.
-            </p>
+            <p className="text-[11.5px] text-neutral-400">{t('adminSettings.exportNote')}</p>
           </div>
         </Card>
       </div>
