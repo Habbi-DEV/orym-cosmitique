@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Star, ShieldCheck, Eye, EyeOff, Trash2, Search, MessagesSquare } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { useLang } from '../context/LanguageContext';
 import { fetchAllReviews, setReviewVisibility, deleteReview } from '../lib/reviews';
 import { supabase } from '../lib/supabase';
 import type { Review } from '../lib/types';
@@ -9,6 +10,7 @@ type AdminReview = Review & { productName: string; isVisible: boolean };
 
 export default function AdminReviews() {
   const { showToast } = useStore();
+  const { t } = useLang();
   const [reviews, setReviews] = useState<AdminReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -62,22 +64,22 @@ export default function AdminReviews() {
     const ok = await setReviewVisibility(r.id, !r.isVisible);
     if (ok) {
       setReviews((prev) => prev.map((x) => (x.id === r.id ? { ...x, isVisible: !r.isVisible } : x)));
-      showToast(r.isVisible ? 'Avis masqué du site' : 'Avis republié sur le site');
+      showToast(r.isVisible ? t('adminReviewsPage.avisMasque') : t('adminReviewsPage.avisRepublie'));
     } else {
-      showToast('Une erreur est survenue');
+      showToast(t('adminReviewsPage.erreurGenerique'));
     }
     setBusyId(null);
   };
 
   const remove = async (r: AdminReview) => {
-    if (!window.confirm(`Supprimer définitivement l’avis de ${r.authorName} ?`)) return;
+    if (!window.confirm(`${t('adminReviewsPage.confirmSuppr')} ${r.authorName} ?`)) return;
     setBusyId(r.id);
     const ok = await deleteReview(r.id);
     if (ok) {
       setReviews((prev) => prev.filter((x) => x.id !== r.id));
-      showToast('Avis supprimé');
+      showToast(t('adminReviewsPage.avisSupprime'));
     } else {
-      showToast('Une erreur est survenue');
+      showToast(t('adminReviewsPage.erreurGenerique'));
     }
     setBusyId(null);
   };
@@ -85,11 +87,13 @@ export default function AdminReviews() {
   return (
     <div className="mx-auto max-w-5xl">
       <div className="mb-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">Confiance client</p>
-        <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">Avis clients</h1>
-        <p className="mt-1 text-[13px] text-neutral-500">
-          Modérez les avis publiés sur la boutique — masquez ou supprimez tout contenu inapproprié.
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
+          {t('adminReviewsPage.confianceClient')}
         </p>
+        <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+          {t('adminReviewsPage.titre')}
+        </h1>
+        <p className="mt-1 text-[13px] text-neutral-500">{t('adminReviewsPage.sub')}</p>
       </div>
 
       <div className="relative mb-5 max-w-sm">
@@ -97,17 +101,17 @@ export default function AdminReviews() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher un produit, un client, un mot…"
+          placeholder={t('adminReviewsPage.rechercherPlaceholder')}
           className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-[13px] outline-none transition focus:border-blush"
         />
       </div>
 
       {loading ? (
-        <p className="text-[13px] text-neutral-400">Chargement…</p>
+        <p className="text-[13px] text-neutral-400">{t('adminReviewsPage.chargement')}</p>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/10 py-16 text-center">
           <MessagesSquare size={28} className="text-neutral-300" />
-          <p className="text-[13.5px] text-neutral-400">Aucun avis pour le moment.</p>
+          <p className="text-[13.5px] text-neutral-400">{t('adminReviewsPage.aucunAvis')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -137,12 +141,12 @@ export default function AdminReviews() {
                     {r.verified && (
                       <span className="flex items-center gap-1 rounded-full bg-stock-soft px-2 py-0.5 text-[10px] font-bold text-stockgreen">
                         <ShieldCheck size={11} />
-                        Vérifié
+                        {t('adminReviewsPage.verifie')}
                       </span>
                     )}
                     {!r.isVisible && (
                       <span className="rounded-full bg-navred/10 px-2 py-0.5 text-[10px] font-bold text-navred">
-                        Masqué
+                        {t('adminReviewsPage.masque')}
                       </span>
                     )}
                   </div>
@@ -159,7 +163,7 @@ export default function AdminReviews() {
                   <button
                     disabled={busyId === r.id}
                     onClick={() => toggleVisible(r)}
-                    title={r.isVisible ? 'Masquer' : 'Republier'}
+                    title={r.isVisible ? t('adminReviewsPage.masquer') : t('adminReviewsPage.republier')}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 text-ink transition hover:bg-cream disabled:opacity-40"
                   >
                     {r.isVisible ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -167,7 +171,7 @@ export default function AdminReviews() {
                   <button
                     disabled={busyId === r.id}
                     onClick={() => remove(r)}
-                    title="Supprimer"
+                    title={t('adminReviewsPage.supprimer')}
                     className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 text-navred transition hover:bg-navred/10 disabled:opacity-40"
                   >
                     <Trash2 size={15} />
