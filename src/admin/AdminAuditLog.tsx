@@ -2,17 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { History, Search, Plus, Pencil, Trash2 } from 'lucide-react';
 import { fetchAuditLog, rowToAuditEntry, type AuditEntry, type AuditAction } from '../lib/audit';
 import { supabase } from '../lib/supabase';
+import { useLang } from '../context/LanguageContext';
+import type { TranslationKey } from '../lib/translations';
 
-const ACTION_META: Record<AuditAction, { icon: React.ElementType; chip: string; label: string }> = {
-  create: { icon: Plus, chip: 'bg-stock-soft text-stockgreen', label: 'Création' },
-  update: { icon: Pencil, chip: 'bg-blue-100 text-blue-700', label: 'Modification' },
-  delete: { icon: Trash2, chip: 'bg-red-100 text-navred', label: 'Suppression' },
+const ACTION_META: Record<AuditAction, { icon: React.ElementType; chip: string; labelKey: TranslationKey }> = {
+  create: { icon: Plus, chip: 'bg-stock-soft text-stockgreen', labelKey: 'adminAuditLog.actionCreation' },
+  update: { icon: Pencil, chip: 'bg-blue-100 text-blue-700', labelKey: 'adminAuditLog.actionModification' },
+  delete: { icon: Trash2, chip: 'bg-red-100 text-navred', labelKey: 'adminAuditLog.actionSuppression' },
 };
 
-const ENTITY_LABELS: Record<string, string> = {
-  commande: 'Commande',
-  produit: 'Produit',
-  promotion: 'Promotion',
+const ENTITY_LABEL_KEYS: Record<string, TranslationKey> = {
+  commande: 'adminAuditLog.entiteCommande',
+  produit: 'adminAuditLog.entiteProduit',
+  promotion: 'adminAuditLog.entitePromotion',
 };
 
 function ChangesSummary({ changes }: { changes: Record<string, unknown> }) {
@@ -34,6 +36,7 @@ export default function AdminAuditLog() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [entityFilter, setEntityFilter] = useState<'tous' | string>('tous');
+  const { t } = useLang();
 
   useEffect(() => {
     fetchAuditLog().then((data) => {
@@ -87,13 +90,13 @@ export default function AdminAuditLog() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">Traçabilité</p>
-        <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-          Journal d'audit
-        </h1>
-        <p className="mt-1 text-[13px] text-neutral-500">
-          Qui a changé quoi, et quand — commandes, produits et promotions.
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blush">
+          {t('adminAuditLog.tracabilite')}
         </p>
+        <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+          {t('adminAuditLog.titre')}
+        </h1>
+        <p className="mt-1 text-[13px] text-neutral-500">{t('adminAuditLog.sub')}</p>
       </div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2.5">
@@ -102,7 +105,7 @@ export default function AdminAuditLog() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher un élément, un email…"
+            placeholder={t('adminAuditLog.rechercherPlaceholder')}
             className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-[13px] outline-none transition focus:border-blush"
           />
         </div>
@@ -113,28 +116,28 @@ export default function AdminAuditLog() {
               entityFilter === 'tous' ? 'bg-ink text-white' : 'bg-cream text-neutral-500'
             }`}
           >
-            Tout
+            {t('adminAuditLog.tout')}
           </button>
-          {entityTypes.map((t) => (
+          {entityTypes.map((type) => (
             <button
-              key={t}
-              onClick={() => setEntityFilter(t)}
+              key={type}
+              onClick={() => setEntityFilter(type)}
               className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
-                entityFilter === t ? 'bg-ink text-white' : 'bg-cream text-neutral-500'
+                entityFilter === type ? 'bg-ink text-white' : 'bg-cream text-neutral-500'
               }`}
             >
-              {ENTITY_LABELS[t] ?? t}
+              {ENTITY_LABEL_KEYS[type] ? t(ENTITY_LABEL_KEYS[type]) : type}
             </button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <p className="text-[13px] text-neutral-400">Chargement…</p>
+        <p className="text-[13px] text-neutral-400">{t('adminAuditLog.chargement')}</p>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-black/10 py-16 text-center">
           <History size={28} className="text-neutral-300" />
-          <p className="text-[13.5px] text-neutral-400">Aucune activité pour le moment.</p>
+          <p className="text-[13.5px] text-neutral-400">{t('adminAuditLog.aucuneActivite')}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -149,12 +152,12 @@ export default function AdminAuditLog() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <p className="text-[13px] font-bold text-ink">
-                      {meta.label} · {ENTITY_LABELS[e.entityType] ?? e.entityType}
+                      {t(meta.labelKey)} · {ENTITY_LABEL_KEYS[e.entityType] ? t(ENTITY_LABEL_KEYS[e.entityType]) : e.entityType}
                     </p>
                     <span className="truncate text-[12.5px] text-neutral-500">{e.entityLabel}</span>
                   </div>
                   <p className="mt-0.5 text-[11.5px] text-neutral-400">
-                    {e.actorEmail ?? 'Système'} ·{' '}
+                    {e.actorEmail ?? t('adminAuditLog.systeme')} ·{' '}
                     {new Date(e.createdAt).toLocaleString('fr-FR', {
                       day: 'numeric',
                       month: 'short',
