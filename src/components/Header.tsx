@@ -21,7 +21,8 @@ export default function Header() {
               aria-label={t('common.retour')}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-ink transition hover:bg-cream"
             >
-              <ArrowLeft size={16} />
+              {/* En RTL, "retour" pointe visuellement vers la droite */}
+              <ArrowLeft size={16} className="rtl:rotate-180" />
             </button>
           )}
           <Link to="/" className="flex flex-col leading-none">
@@ -71,7 +72,7 @@ export default function Header() {
           >
             <Heart size={16} className={wishlist.length > 0 ? 'fill-navred text-navred' : ''} />
             {wishlist.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1 text-[10px] font-bold text-white shadow">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1 text-[10px] font-bold text-white shadow rtl:-left-1 rtl:right-auto">
                 {wishlist.length}
               </span>
             )}
@@ -84,7 +85,7 @@ export default function Header() {
             <ShoppingBag size={15} />
             <span className="hidden text-xs font-semibold sm:block">{t('nav.panier')}</span>
             {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1 text-[10px] font-bold text-white shadow">
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-navred px-1 text-[10px] font-bold text-white shadow rtl:-left-1 rtl:right-auto">
                 {cartCount}
               </span>
             )}
