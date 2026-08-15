@@ -16,7 +16,10 @@ const today = new Date().toISOString().split('T')[0];
 
 const urls = [
   { loc: BASE, priority: '1.0', freq: 'daily' },
-  { loc: `${BASE}/wishlist`, priority: '0.5', freq: 'weekly' },
+  { loc: `${BASE}/categories`, priority: '0.6', freq: 'weekly' },
+  { loc: `${BASE}/confidentialite`, priority: '0.2', freq: 'yearly' },
+  { loc: `${BASE}/conditions-generales`, priority: '0.2', freq: 'yearly' },
+  { loc: `${BASE}/politique-retour`, priority: '0.2', freq: 'yearly' },
   ...ids.map((id) => ({ loc: `${BASE}/produit/${id}`, priority: '0.8', freq: 'weekly' })),
 ];
 

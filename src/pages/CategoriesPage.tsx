@@ -10,6 +10,7 @@ import { useData } from '../context/DataContext';
 import { useLang } from '../context/LanguageContext';
 import { getCategories, slugifyCategory, sortProducts, type SortKey } from '../lib/catalog';
 import type { TranslationKey } from '../lib/translations';
+import { useSEO } from '../lib/seo';
 
 const SORT_KEYS: { key: SortKey; labelKey: TranslationKey }[] = [
   { key: 'pertinence', labelKey: 'filters.populaires' },
@@ -35,6 +36,21 @@ export default function CategoriesPage() {
       sort,
     );
   }, [activeProducts, current, sort]);
+
+  useSEO(
+    current
+      ? {
+          title: categoryLabel(current.name),
+          description: `Découvrez notre sélection ${categoryLabel(current.name)} — ORYAM Cosmetics.`,
+          path: `/categories/${current.slug}`,
+        }
+      : {
+          title: 'Toutes nos catégories',
+          description: 'Parcourez toutes les catégories de soins ORYAM Cosmetics.',
+          path: '/categories',
+        },
+    [current?.slug, lang],
+  );
 
   return (
     <div className="min-h-screen">

@@ -71,7 +71,33 @@ export const translations = {
       suivreCommande: 'Suivre ma commande',
       toutesCategories: 'Toutes les catégories',
       parrainage: 'Programme de parrainage',
+      confidentialite: 'Politique de confidentialité',
+      conditions: 'Conditions générales de vente',
+      politiqueRetour: 'Politique de retour',
       concu: 'Conçu avec passion à Alger',
+    },
+    search: {
+      placeholder: 'Rechercher un produit…',
+      hint: 'Tapez au moins 2 lettres pour lancer la recherche.',
+      aucunResultat: 'Aucun produit trouvé pour cette recherche.',
+    },
+    install: {
+      title: 'Installer ORYAM',
+      sub: 'Accès rapide depuis votre écran d’accueil',
+      cta: 'Installer',
+    },
+    legal: {
+      retourAccueil: 'Retour à l’accueil',
+      majLabel: 'Dernière mise à jour : ',
+      confidentialiteTitle: 'Politique de confidentialité',
+      confidentialiteBody:
+        'ORYAM Cosmetics accorde une grande importance à la protection de vos données personnelles. Cette page explique quelles informations nous collectons et comment nous les utilisons.\n\nLors d’une commande, nous collectons votre nom, numéro de téléphone, wilaya, commune et adresse de livraison. Ces informations servent uniquement à traiter, confirmer et livrer votre commande, ainsi qu’à assurer le suivi du service client.\n\nNotre site utilise des outils de mesure d’audience et de publicité (Meta Pixel, TikTok Pixel) qui déposent des cookies afin de mesurer la performance de nos campagnes et de vous proposer des offres pertinentes. Vous pouvez désactiver ces cookies à tout moment depuis les paramètres de votre navigateur.\n\nVos données ne sont jamais vendues à des tiers. Elles peuvent être partagées uniquement avec nos prestataires nécessaires au fonctionnement du service : société de livraison pour l’acheminement de votre colis, et hébergeur technique de notre plateforme (Supabase).\n\nVous disposez à tout moment d’un droit d’accès, de rectification ou de suppression de vos données personnelles. Pour exercer ce droit, contactez-nous via WhatsApp ou Instagram, indiqués en bas de page.',
+      conditionsTitle: 'Conditions générales de vente',
+      conditionsBody:
+        'Les présentes conditions régissent toute commande passée sur le site ORYAM Cosmetics, spécialisé dans la vente de produits cosmétiques et soins de la peau, livrés en Algérie.\n\nLes prix affichés sont exprimés en dinars algériens (DA) et peuvent être modifiés à tout moment sans préavis ; le prix appliqué est celui en vigueur au moment de la validation de la commande.\n\nAprès validation de votre commande, celle-ci peut faire l’objet d’une confirmation par téléphone ou WhatsApp avant expédition. La livraison est assurée vers les 58 wilayas, sous 24 à 72 heures selon la zone, à domicile ou en point relais (stop desk), avec des frais de livraison variables selon la wilaya.\n\nLe paiement s’effectue en espèces, à la réception du colis (paiement à la livraison).\n\nS’agissant de produits cosmétiques, nous recommandons un test préalable sur une petite zone de peau avant la première utilisation complète, notamment en cas de peau sensible ou d’allergie connue.\n\nPour tout litige, nous vous invitons à nous contacter directement avant toute autre démarche — notre équipe s’engage à trouver une solution rapide et satisfaisante.',
+      retourTitle: 'Politique de retour & remboursement',
+      retourBody:
+        'Vous disposez d’un délai de 7 jours à compter de la réception de votre commande pour demander un retour ou un échange.\n\nPour être accepté, le produit doit être non ouvert, non utilisé, et retourné dans son emballage d’origine — pour des raisons d’hygiène propres aux produits cosmétiques, aucun retour ne peut être accepté sur un produit descellé ou entamé, sauf en cas de défaut ou d’erreur de notre part.\n\nPour initier un retour, contactez-nous via WhatsApp en indiquant votre numéro de commande et, si possible, une photo du produit. Notre équipe vous guidera dans la procédure.\n\nEn cas d’erreur de notre part (produit erroné ou défectueux), les frais de retour sont entièrement pris en charge par ORYAM Cosmetics et un échange ou remboursement complet vous est proposé. Dans les autres cas, les frais de retour restent à la charge du client.\n\nLe remboursement, lorsqu’il est applicable, est traité dans les meilleurs délais après réception et vérification du produit retourné.',
     },
     promosSection: {
       eyebrow: 'Offres Limitées',
@@ -96,6 +122,8 @@ export const translations = {
       panierVide: 'Votre panier est vide',
       panierVideSub: 'Découvrez nos soins et ajoutez vos favoris.',
       ajouterAutreProduit: 'Ajouter un autre produit',
+      completezCommande: 'Complétez votre commande',
+      ajouter: 'Ajouter',
       sousTotal: 'Sous-total',
       continuerLivraison: 'Continuer vers la livraison',
       civilite: 'Civilité',
@@ -643,7 +671,33 @@ export const translations = {
       suivreCommande: 'تتبع طلبيتي',
       toutesCategories: 'جميع الفئات',
       parrainage: 'برنامج الإحالة',
+      confidentialite: 'سياسة الخصوصية',
+      conditions: 'الشروط العامة للبيع',
+      politiqueRetour: 'سياسة الإرجاع',
       concu: 'صُنع بشغف في الجزائر العاصمة',
+    },
+    search: {
+      placeholder: 'ابحث عن منتج…',
+      hint: 'اكتب حرفين على الأقل لبدء البحث.',
+      aucunResultat: 'لم يتم العثور على أي منتج مطابق.',
+    },
+    install: {
+      title: 'ثبّتي تطبيق ORYAM',
+      sub: 'وصول سريع من الشاشة الرئيسية',
+      cta: 'تثبيت',
+    },
+    legal: {
+      retourAccueil: 'العودة إلى الصفحة الرئيسية',
+      majLabel: 'آخر تحديث: ',
+      confidentialiteTitle: 'سياسة الخصوصية',
+      confidentialiteBody:
+        'تولي ORYAM Cosmetics أهمية كبيرة لحماية بياناتكم الشخصية. توضح هذه الصفحة المعلومات التي نجمعها وكيفية استخدامها.\n\nعند إتمام طلبية، نجمع اسمكم ورقم هاتفكم والولاية والبلدية وعنوان التوصيل. تُستخدم هذه المعلومات فقط لمعالجة طلبيتكم وتأكيدها وتوصيلها، ولمتابعة خدمة العملاء.\n\nيستخدم موقعنا أدوات قياس الجمهور والإعلانات (Meta Pixel، TikTok Pixel) التي تضع ملفات تعريف الارتباط (cookies) لقياس أداء حملاتنا الإعلانية وتقديم عروض ملائمة لكم. يمكنكم تعطيل هذه الملفات في أي وقت من إعدادات متصفحكم.\n\nلا تُباع بياناتكم أبداً لأطراف ثالثة. يمكن مشاركتها فقط مع مزوّدي الخدمة الضروريين لتشغيل الخدمة: شركة التوصيل لإيصال طردكم، ومزوّد الاستضافة التقنية لمنصتنا (Supabase).\n\nيحق لكم في أي وقت الوصول إلى بياناتكم الشخصية أو تصحيحها أو حذفها. لممارسة هذا الحق، تواصلوا معنا عبر واتساب أو إنستغرام، الموجودين أسفل الصفحة.',
+      conditionsTitle: 'الشروط العامة للبيع',
+      conditionsBody:
+        'تحكم هذه الشروط كل طلبية تتم عبر موقع ORYAM Cosmetics، المتخصص في بيع منتجات التجميل والعناية بالبشرة، والتي يتم توصيلها داخل الجزائر.\n\nالأسعار المعروضة بالدينار الجزائري (DA) وقابلة للتعديل في أي وقت دون إشعار مسبق؛ السعر المعتمد هو السعر الساري وقت تأكيد الطلبية.\n\nبعد تأكيد طلبيتكم، قد تخضع لتأكيد إضافي عبر الهاتف أو واتساب قبل الشحن. يتم التوصيل إلى 58 ولاية، خلال 24 إلى 72 ساعة حسب المنطقة، إلى المنزل أو نقطة استلام (ستوب ديسك)، مع رسوم توصيل تختلف حسب الولاية.\n\nيتم الدفع نقداً عند استلام الطرد (الدفع عند التسليم).\n\nبما أن المنتجات تجميلية، ننصح بإجراء اختبار مسبق على منطقة صغيرة من البشرة قبل الاستخدام الكامل، خاصة لأصحاب البشرة الحساسة أو من لديهم حساسية معروفة.\n\nفي حال وجود أي نزاع، ندعوكم للتواصل معنا مباشرة قبل أي إجراء آخر — فريقنا ملتزم بإيجاد حل سريع ومُرضٍ.',
+      retourTitle: 'سياسة الإرجاع والاسترجاع',
+      retourBody:
+        'لديكم مهلة 7 أيام من تاريخ استلام طلبيتكم لطلب إرجاع أو استبدال المنتج.\n\nلقبول الإرجاع، يجب أن يكون المنتج غير مفتوح وغير مستعمل، ومُعاد في تغليفه الأصلي — لأسباب صحية خاصة بمنتجات التجميل، لا يمكن قبول أي إرجاع لمنتج تم فتحه أو استخدامه، إلا في حالة وجود عيب أو خطأ من جانبنا.\n\nلبدء إجراء الإرجاع، تواصلوا معنا عبر واتساب مع ذكر رقم الطلبية، وإرفاق صورة للمنتج إن أمكن. سيرافقكم فريقنا خلال الإجراء.\n\nفي حال وجود خطأ من جانبنا (منتج خاطئ أو معيب)، تتحمل ORYAM Cosmetics كامل مصاريف الإرجاع ويُقترح عليكم استبدال أو استرجاع كامل للمبلغ. في الحالات الأخرى، تبقى مصاريف الإرجاع على عاتق الزبون.\n\nيتم معالجة الاسترجاع، عند الاقتضاء، في أقرب وقت ممكن بعد استلام والتحقق من المنتج المُعاد.',
     },
     promosSection: {
       eyebrow: 'عروض محدودة',
@@ -668,6 +722,8 @@ export const translations = {
       panierVide: 'سلتك فارغة',
       panierVideSub: 'اكتشفي منتجاتنا وأضيفي المفضلة لديك.',
       ajouterAutreProduit: 'إضافة منتج آخر',
+      completezCommande: 'أكملي طلبيتك',
+      ajouter: 'إضافة',
       sousTotal: 'المجموع الفرعي',
       continuerLivraison: 'متابعة إلى التوصيل',
       civilite: 'اللقب',

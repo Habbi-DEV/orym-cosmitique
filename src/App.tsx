@@ -11,9 +11,12 @@ import TrackOrderPage from './pages/TrackOrderPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LoyaltyPage from './pages/LoyaltyPage';
 import LandingPage from './pages/LandingPage';
+import LegalPage from './pages/LegalPage';
 import CheckoutModal from './components/CheckoutModal';
 import Toast from './components/Toast';
 import FloatingContact from './components/FloatingContact';
+import SearchOverlay from './components/SearchOverlay';
+import InstallPrompt from './components/InstallPrompt';
 import AdminLayout from './admin/AdminLayout';
 import AdminLogin from './admin/AdminLogin';
 import AdminDashboard from './admin/AdminDashboard';
@@ -67,6 +70,36 @@ export default function App() {
               <Route path="/categories/:slug" element={<CategoriesPage />} />
               <Route path="/parrainage" element={<LoyaltyPage />} />
               <Route path="/lp/:id" element={<LandingPage />} />
+              <Route
+                path="/confidentialite"
+                element={
+                  <LegalPage
+                    titleKey="legal.confidentialiteTitle"
+                    bodyKey="legal.confidentialiteBody"
+                    path="/confidentialite"
+                  />
+                }
+              />
+              <Route
+                path="/conditions-generales"
+                element={
+                  <LegalPage
+                    titleKey="legal.conditionsTitle"
+                    bodyKey="legal.conditionsBody"
+                    path="/conditions-generales"
+                  />
+                }
+              />
+              <Route
+                path="/politique-retour"
+                element={
+                  <LegalPage
+                    titleKey="legal.retourTitle"
+                    bodyKey="legal.retourBody"
+                    path="/politique-retour"
+                  />
+                }
+              />
 
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminLayout />}>
@@ -85,8 +118,10 @@ export default function App() {
               <Route path="*" element={<HomePage />} />
             </Routes>
             <CheckoutModal />
+            <SearchOverlay />
             <Toast />
             <FloatingContactGate />
+            <InstallPrompt />
           </BrowserRouter>
         </StoreProvider>
       </DataProvider>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Heart, ShoppingBag } from 'lucide-react';
 import type { CatalogProduct } from '../lib/types';
+import { LOW_STOCK_THRESHOLD } from '../lib/types';
 import { useStore } from '../context/StoreContext';
 import { useLang } from '../context/LanguageContext';
 import { localizeProduct } from '../lib/i18n-product';
@@ -144,6 +145,11 @@ export default function ProductCard({ product, index = 0 }: { product: CatalogPr
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-semibold text-navred">
               <span className="h-1.5 w-1.5 rounded-full bg-navred" />
               {t('product.rupture')}
+            </span>
+          )}
+          {product.inStock && product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD && (
+            <span className="ml-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
+              {lang === 'fr' ? `Plus que ${product.stock}` : `تبقّى ${product.stock} فقط`}
             </span>
           )}
         </div>

@@ -25,6 +25,8 @@ import { useLang } from '../context/LanguageContext';
 import { localizeProduct } from '../lib/i18n-product';
 import { formatDA, promoPercent } from '../lib/format';
 import { track } from '../lib/meta';
+import { useSEO, siteUrl } from '../lib/seo';
+import { LOW_STOCK_THRESHOLD } from '../lib/types';
 
 function Accordion({
   icon: Icon,
@@ -99,6 +101,50 @@ export default function ProductPage() {
     [product, links, getProduct],
   );
 
+  // SEO — appelé avant le early-return "produit introuvable" pour respecter
+  // les règles des hooks (toujours dans le même ordre à chaque rendu).
+  const seoView = product ? localizeProduct(product, lang) : null;
+  useSEO(
+    product && seoView
+      ? {
+          title: seoView.name,
+          description: seoView.shortDesc || seoView.description.slice(0, 155),
+          path: `/produit/${product.id}`,
+          image: product.images[0],
+          type: 'product',
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: seoView.name,
+            description: seoView.shortDesc,
+            image: product.images.map((img) => (img.startsWith('http') ? img : `${siteUrl()}${img}`)),
+            sku: product.id,
+            aggregateRating:
+              product.reviews > 0
+                ? {
+                    '@type': 'AggregateRating',
+                    ratingValue: product.rating,
+                    reviewCount: product.reviews,
+                  }
+                : undefined,
+            offers: {
+              '@type': 'Offer',
+              url: `${siteUrl()}/produit/${product.id}`,
+              priceCurrency: 'DZD',
+              price: product.price,
+              availability: product.inStock
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            },
+          },
+        }
+      : {
+          title: t('productPage.introuvable'),
+          description: t('productPage.introuvableSub'),
+        },
+    [product?.id, lang],
+  );
+
   if (!product) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -118,7 +164,7 @@ export default function ProductPage() {
     );
   }
 
-  const view = localizeProduct(product, lang);
+  const view = seoView!;
   const wished = isWished(product.id);
   const percent = promoPercent(product.price, product.oldPrice);
   const hasMultiple = product.images.length > 1;
@@ -269,6 +315,13 @@ export default function ProductPage() {
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-[11.5px] font-semibold text-navred">
                   <span className="h-1.5 w-1.5 rounded-full bg-navred" />
                   {t('product.rupture')}
+                </span>
+              )}
+              {product.inStock && product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD && (
+                <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[11.5px] font-semibold text-amber-700">
+                  {lang === 'fr'
+                    ? `Plus que ${product.stock} en stock`
+                    : `تبقّى ${product.stock} فقط في المخزون`}
                 </span>
               )}
             </div>

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Languages } from 'lucide-react';
+import { Heart, ShoppingBag, Languages, Search } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useLang } from '../context/LanguageContext';
 
 export default function Hero() {
-  const { cartCount, openCheckout, wishlist } = useStore();
+  const { cartCount, openCheckout, wishlist, openSearch } = useStore();
   const { lang, setLang, t } = useLang();
 
   return (
@@ -32,6 +32,9 @@ export default function Hero() {
           </Link>
 
           <div className="flex items-center gap-5">
+            <button onClick={openSearch} aria-label={t('common.rechercher')} className="text-ink">
+              <Search size={20} />
+            </button>
             {/* Sélecteur de langue FR/AR — persiste le choix et bascule le
                 site (+ layout) en RTL pour l'arabe. Voir LanguageContext. */}
             <button

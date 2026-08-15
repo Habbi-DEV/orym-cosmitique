@@ -1,11 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Instagram, ShoppingBag, ArrowLeft, Heart, Languages } from 'lucide-react';
+import { Instagram, ShoppingBag, ArrowLeft, Heart, Languages, Search } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useLang } from '../context/LanguageContext';
 import { getWhatsAppUrl } from '../lib/whatsapp';
 
 export default function Header() {
-  const { cartCount, openCheckout, wishlist } = useStore();
+  const { cartCount, openCheckout, wishlist, openSearch } = useStore();
   const { lang, setLang, t } = useLang();
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +36,13 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={openSearch}
+            aria-label={t('common.rechercher')}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-ink transition hover:border-blush hover:text-blush"
+          >
+            <Search size={16} />
+          </button>
           {/* Sélecteur de langue — même bouton que sur le hero de l'accueil,
               pour rester accessible sur toutes les pages. */}
           <button

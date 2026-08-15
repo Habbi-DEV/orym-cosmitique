@@ -53,7 +53,19 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-white/10 pt-6 text-[11.5px] text-white/35 sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-6 text-[11.5px] text-white/40">
+          <Link to="/confidentialite" className="transition hover:text-blush">
+            {t('footer.confidentialite')}
+          </Link>
+          <Link to="/conditions-generales" className="transition hover:text-blush">
+            {t('footer.conditions')}
+          </Link>
+          <Link to="/politique-retour" className="transition hover:text-blush">
+            {t('footer.politiqueRetour')}
+          </Link>
+        </div>
+
+        <div className="mt-4 flex flex-col items-start justify-between gap-2 border-t border-white/10 pt-6 text-[11.5px] text-white/35 sm:flex-row sm:items-center">
           <span>© 2025 Oryam Cosmetics — {t('footer.rights')}</span>
           <span>{t('footer.concu')}</span>
         </div>

@@ -47,9 +47,12 @@ export default function CheckoutModal() {
     removeFromCart,
     clearCart,
     cartTotal,
+    addToCart,
   } = useStore();
   const {
     getProduct,
+    activeProducts,
+    links,
     shipping: rates,
     validatePromo,
     createOrder,
@@ -112,6 +115,26 @@ export default function CheckoutModal() {
 
   const discount = promoApplied?.discount ?? 0;
   const grandTotal = cartTotal - discount + (shipping ?? 0);
+
+  // Suggestions "Complétez votre commande" — produits liés à ceux déjà dans
+  // le panier (mêmes `links` que la section "Vous aimerez aussi" côté
+  // produit), en excluant ce qui est déjà dans le panier ou en rupture.
+  const crossSell = useMemo(() => {
+    if (cart.length === 0) return [];
+    const cartIds = new Set(cart.map((i) => i.id));
+    const candidateIds = new Set<string>();
+    for (const item of cart) {
+      const p = getProduct(item.id);
+      if (!p) continue;
+      for (const relId of links[p.id] ?? p.related) candidateIds.add(relId);
+    }
+    return [...candidateIds]
+      .filter((id) => !cartIds.has(id))
+      .map((id) => activeProducts.find((p) => p.id === id))
+      .filter((p): p is NonNullable<typeof p> => Boolean(p))
+      .filter((p) => p.inStock)
+      .slice(0, 6);
+  }, [cart, getProduct, links, activeProducts]);
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
@@ -370,6 +393,54 @@ export default function CheckoutModal() {
                     <Plus size={15} />
                     {t('checkout.ajouterAutreProduit')}
                   </button>
+
+                  {crossSell.length > 0 && (
+                    <div className="pt-1">
+                      <p className="mb-2.5 text-[12px] font-bold uppercase tracking-[0.14em] text-neutral-400">
+                        {t('checkout.completezCommande')}
+                      </p>
+                      <div
+                        className="flex gap-2.5 overflow-x-auto pb-1"
+                        style={{ scrollbarWidth: 'none' }}
+                      >
+                        {crossSell.map((p) => {
+                          const view = localizeProduct(p, lang);
+                          return (
+                            <div
+                              key={p.id}
+                              className="flex w-32 shrink-0 flex-col rounded-2xl border border-neutral-100 bg-white p-2.5"
+                            >
+                              <img
+                                src={p.images[0]}
+                                alt={view.name}
+                                className="h-20 w-full rounded-xl bg-cream object-cover"
+                              />
+                              <p className="mt-2 line-clamp-2 text-[11.5px] font-semibold leading-tight">
+                                {view.name}
+                              </p>
+                              <p className="mt-1 text-[11px] font-bold text-blush">
+                                {formatDA(p.price)}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  addToCart(p.id, 1);
+                                  track('AddToCart', {
+                                    content_ids: [p.id],
+                                    value: p.price,
+                                    currency: 'DZD',
+                                  });
+                                }}
+                                className="mt-2 flex items-center justify-center gap-1 rounded-full bg-ink py-1.5 text-[10.5px] font-bold text-white transition hover:bg-black"
+                              >
+                                <Plus size={11} />
+                                {t('checkout.ajouter')}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-neutral-100 px-5 py-4">

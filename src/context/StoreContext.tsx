@@ -35,6 +35,9 @@ interface StoreContextValue {
   checkoutOpen: boolean;
   openCheckout: () => void;
   closeCheckout: () => void;
+  searchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
   toast: ToastState | null;
   showToast: (msg: string) => void;
 }
@@ -64,6 +67,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>(() => load('oryam-cart', []));
   const [wishlist, setWishlist] = useState<string[]>(() => load('oryam-wishlist', []));
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -176,6 +180,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     checkoutOpen,
     openCheckout: () => setCheckoutOpen(true),
     closeCheckout: () => setCheckoutOpen(false),
+    searchOpen,
+    openSearch: () => setSearchOpen(true),
+    closeSearch: () => setSearchOpen(false),
     toast,
     showToast,
   };
