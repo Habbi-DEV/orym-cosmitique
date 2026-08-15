@@ -48,7 +48,7 @@ export default function Hero() {
             <Link to="/wishlist" aria-label={t('nav.wishlist')} className="relative text-ink">
               <Heart size={22} className={wishlist.length > 0 ? 'fill-navred text-navred' : ''} />
               {wishlist.length > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow rtl:-left-2 rtl:right-auto">
                   {wishlist.length}
                 </span>
               )}
@@ -56,7 +56,7 @@ export default function Hero() {
             <button onClick={openCheckout} aria-label={t('nav.panier')} className="relative text-ink">
               <ShoppingBag size={22} />
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow">
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-navred px-1 text-[9px] font-bold text-white shadow rtl:-left-2 rtl:right-auto">
                   {cartCount}
                 </span>
               )}
