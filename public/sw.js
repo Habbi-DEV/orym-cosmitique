@@ -15,6 +15,11 @@
  */
 const CACHE_VERSION = 'oryam-v1';
 
+// Ouvert UNE SEULE fois (au lieu de caches.open() à chaque requête image),
+// et réutilisé pour toutes les requêtes suivantes — évite l'overhead IPC
+// répété qui ralentissait le chargement des images.
+let cachePromise = caches.open(CACHE_VERSION);
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
@@ -38,13 +43,14 @@ self.addEventListener('fetch', (event) => {
   const isImage = url.pathname.startsWith('/img/');
 
   if (isImage) {
-    // Cache-first pour les images produits.
+    // Cache-first pour les images produits, cache ouvert une seule fois.
     event.respondWith(
-      caches.open(CACHE_VERSION).then(async (cache) => {
+      cachePromise.then(async (cache) => {
         const cached = await cache.match(request);
-        if (cached) return cached;
+        if (cached) return cached; // hit → réponse immédiate, aucun accès réseau
         const res = await fetch(request);
-        if (res.ok) cache.put(request, res.clone());
+        // écriture en cache en arrière-plan, ne bloque pas la réponse
+        if (res.ok) event.waitUntil(cache.put(request, res.clone()));
         return res;
       }),
     );
@@ -56,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     fetch(request)
       .then((res) => {
         if (res.ok) {
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, res.clone()));
+          cachePromise.then((cache) => cache.put(request, res.clone()));
         }
         return res;
       })
