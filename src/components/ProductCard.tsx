@@ -60,9 +60,9 @@ export default function ProductCard({ product, index = 0 }: { product: CatalogPr
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
 
-        {/* Type tag */}
+        {/* Type tag — coin "début" de ligne : à gauche en FR, à droite en AR */}
         <span
-          className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow ${
+          className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide text-white shadow rtl:left-auto rtl:right-2.5 ${
             product.type === 'pack' ? 'bg-violetp' : 'bg-tagblue'
           }`}
         >
@@ -70,26 +70,27 @@ export default function ProductCard({ product, index = 0 }: { product: CatalogPr
         </span>
 
         {percent && (
-          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-navred px-2 py-0.5 text-[10px] font-bold text-white shadow">
+          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-navred px-2 py-0.5 text-[10px] font-bold text-white shadow rtl:left-auto rtl:right-2.5">
             -{percent}%
           </span>
         )}
 
-        {/* Wishlist (sole top-right action) */}
+        {/* Wishlist (seule action en coin "fin" de ligne) */}
         <button
           aria-label={t('nav.wishlist')}
           onClick={(e) => {
             e.stopPropagation();
             toggleWishlist(product.id);
           }}
-          className={`absolute right-2.5 top-2.5 flex h-9 w-9 items-center justify-center rounded-lg shadow-[0_2px_10px_rgba(12,12,14,0.18)] backdrop-blur transition active:scale-90 ${
+          className={`absolute right-2.5 top-2.5 flex h-9 w-9 items-center justify-center rounded-lg shadow-[0_2px_10px_rgba(12,12,14,0.18)] backdrop-blur transition active:scale-90 rtl:right-auto rtl:left-2.5 ${
             wished ? 'bg-navred text-white' : 'bg-white/95 text-ink hover:text-navred'
           }`}
         >
           <Heart size={15} className={wished ? 'fill-current' : ''} />
         </button>
 
-        {/* Carousel arrows */}
+        {/* Carousel arrows — position physique volontairement conservée
+            (navigation d'images, indépendante du sens de lecture) */}
         {hasMultiple && (
           <>
             <button
@@ -148,7 +149,7 @@ export default function ProductCard({ product, index = 0 }: { product: CatalogPr
             </span>
           )}
           {product.inStock && product.stock > 0 && product.stock <= LOW_STOCK_THRESHOLD && (
-            <span className="ml-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
+            <span className="ms-1.5 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
               {lang === 'fr' ? `Plus que ${product.stock}` : `تبقّى ${product.stock} فقط`}
             </span>
           )}
